@@ -1,5 +1,3 @@
-import data from "./data.json" assert{type: "json"};
-
 class Course {
     constructor(course_code, section) {
         this.course_code = course_code;
@@ -15,68 +13,16 @@ class Section {
     }
 
     parse_time(section_times) {
-        let times = []
+        const times = new Array();
         for(let i = 0; i < section_times.length; ++i) {
-            let day = this.find_day(section_times[i]);
-            let start_time = this.find_start_time(section_times[i]);
-            let end_time = this.find_end_time(section_times[i]);
-            let duration = this.find_duration(start_time, end_time);
+            const day = section_times[i].day;
+            const start_time = section_times[i].start_time;
+            const end_time = section_times[i].end_time;
+            const duration = end_time - start_time;
 
             times.push(new Time(day, start_time,end_time, duration));
         }
         return times;
-    }
-
-    find_day(time) {
-        for(let i = 0; i < time.length; ++i) {
-            if(time[i] == " ") {
-                return time.substring(0, i);
-            }
-        }
-    }
-
-    find_start_time(time) {
-        let space_index = 0;
-        let colon_index = 0;
-
-        for(let i = 0; i < time.length; ++i) {
-            if(time[i] == " ") {
-                space_index = i;
-            }
-            if(time[i] == ":") {
-                colon_index = i;
-
-                let start_time = parseInt(time.substring(space_index + 1, colon_index));
-                return start_time < 9 ? start_time + 12 : start_time;
-            }
-        }
-    }
-
-    find_end_time(time) {
-        let dash_index = 0;
-        let colon_index = 0;
-
-        let colon_count = 0;
-
-        for(let i = 0; i < time.length; ++i) {
-            if(time[i] == "-") {
-                dash_index = i;
-            }
-            if(time[i] == ":") {
-                colon_index = i;
-                if(colon_count == 0) {
-                    colon_count++;
-                    continue;
-                }
-
-                let end_time = parseInt(time.substring(dash_index + 2, colon_index));
-                return end_time < 9 ? end_time + 12 : end_time;
-            }
-        }
-    }
-
-    find_duration(start_time, end_time) {
-        return end_time - start_time;
     }
 };
 
@@ -97,23 +43,32 @@ class LimitNode {
 };
 
 function parse_json() {
-    for(let i = 0; i < data.length; ++i) {
-        let code = data[i].code;
-        let section_length = data[i].section.length;
-        let type = data[i].section.substring(0, section_length / 2);
-        let num = data[i].section.substring(section_length / 2, section_length);
-        let time = data[i].time;
-    
-        if(!course_code_map.has(code)) {
-            all_courses[course_count] = new Array();
-            all_courses[course_count][course_section_map.get("LEC")] = new Array();
-            all_courses[course_count][course_section_map.get("TUT")] = new Array();
-            all_courses[course_count][course_section_map.get("PRA")] = new Array();
-    
-            course_code_map.set(code, course_count);
-            course_count++;
+    const next_button = document.querySelector(".next_course");
+
+    if(!next_button) {
+        return;
+    }
+
+    const arr = JSON.parse(localStorage.getItem("course_data"));
+
+    for(let i = 0; i < arr.length; ++i) {
+        for(let j = 0; j < arr[i].length; ++j) {
+            const code = arr[i][j].course_code;
+            const type = arr[i][j].teach_method;
+            const num = arr[i][j].section_number;
+            const time = arr[i][j].time;
+
+            if(!course_code_map.has(code)) {
+                all_courses[course_count] = new Array();
+                all_courses[course_count][course_section_map.get("LEC")] = new Array();
+                all_courses[course_count][course_section_map.get("TUT")] = new Array();
+                all_courses[course_count][course_section_map.get("PRA")] = new Array();
+
+                course_code_map.set(code, course_count);
+                course_count++;
+            }
+            all_courses[course_code_map.get(code)][course_section_map.get(type)].push(new Course(code, new Section(type, num, time)));
         }
-        all_courses[course_code_map.get(code)][course_section_map.get(type)].push(new Course(code, new Section(type, num, time)));
     }
 }
 
@@ -126,6 +81,12 @@ function create_permutations() {
 }
 
 function create_schedule() {
+    const next_button = document.querySelector(".next_course");
+
+    if(!next_button) {
+        return;
+    }
+    
     total_permutations = permutations(counter);
     
     for(let i = 0; i < total_permutations; ++i) {
@@ -134,16 +95,16 @@ function create_schedule() {
         for(let j = 0; j < days_of_week.size; ++j) {
             temp_schedule[j] = new Array(max_hours_per_day);
         }
-        for(let j = 0; j < all_courses.length; ++j) {
-            for(let k = 0; k < all_courses[j].length; ++k) {
+        for(let j = 0; j < all_courses.length && !conflict; ++j) {
+            for(let k = 0; k < all_courses[j].length && !conflict; ++k) {
     
                 if(all_courses[j][k][counter[j * 3 + k].count] != undefined) {
                     const course = all_courses[j][k][counter[j * 3 + k].count];
                     const time = course.section.section_times;
     
     
-                    for(let l = 0; l < time.length; ++l) {
-                        for(let m = 0; m < time[l].duration; ++m) {
+                    for(let l = 0; l < time.length && !conflict; ++l) {
+                        for(let m = 0; m < time[l].duration && !conflict; ++m) {
                             if(!temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m]) {
                                 temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m] = course;
                             }
@@ -154,13 +115,11 @@ function create_schedule() {
                     }
                 }
             }
-    
         }
     
         if(!conflict) {
             schedule.push(temp_schedule);
         }
-    
         add_one(counter);
     }
 }
@@ -213,6 +172,15 @@ function print_schedule(schedule) {
 function print_on_table(schedule) {
     const table = document.querySelector(".table");
 
+    if(!table) {
+        return;
+    }
+
+    if(!schedule) {
+        console.log("No schedule");
+        return;
+    }
+
     for(let i = 0; i < schedule.length; ++i) {
         for(let j = 0; j < schedule[i].length; ++j) {
             if(schedule[i][j]) {
@@ -242,56 +210,28 @@ function next_schedule_click() {
     });
 }
 
-async function postData(url = "", data = {}) {
-    const response = await fetch(url, {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        redirect: "follow",
-        referrerPolicy: "no-referrer",
-        headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Credentials": "true"
-        },
-        body: JSON.stringify(data),
-    })
-    .then(data => {
-        console.log(data);
-    })
-    .catch(error => {
-        console.log(error);
-    })
-    return response.json();
+async function get_info(course_code) {
+    const res = await fetch(baseUrl + "course?key=" + course_code, {
+      method: "GET"
+    });
+
+    const data = await res.text();
+
+    return data;
 }
 
-function course_found() {
-    let body = {
-        courseCodeAndTitleProps: {
-            courseCode: "ECE302H1",
-            courseTitle: "Probability and Applications",
-        },
-        departmentProps:[],
-        campuses:[],
-        sessions:["20239","20241","20239-20241"],
-        requirementProps:[],
-        instructor:"",
-        courseLevels:[],
-        deliveryModes:[],
-        dayPreferences:[],
-        timePreferences:[],
-        divisions:["APSC"],
-        creditWeights:[],
-        page:1,
-        pageSize:20,
-        direction:"asc"
-    }
-    // postData("https://api.easi.utoronto.ca/ttb/getPageableCourses", body).then((data) => {
-    //     console.log(data);
-    // });
+function course_found(course_code) {
+    const course_info = get_info(course_code);
 
-
+    course_info.then(result => {
+        if(!localStorage.getItem("course_data")) {
+            localStorage.setItem("course_data", JSON.stringify(new Array()));
+        }
+        const arr = JSON.parse(localStorage.getItem("course_data"));
+        arr.push(JSON.parse(result));
+        localStorage.setItem("course_data", JSON.stringify(arr));
+        console.log("added");
+    });
 
     return true;
 }
@@ -358,6 +298,7 @@ function course_search() {
     });
 }
 
+const course_data = new Array();
 const input_course_set = new Set();
 const course_code_map = new Map();
 const course_section_map = new Map([
@@ -381,6 +322,8 @@ const colors = new Map([
     [5, "blue"],
     [6, "red"]
 ]);
+
+const baseUrl = "http://localhost:3000/";
 
 let course_count = 0;
 let possibility_count = 0;
