@@ -169,11 +169,22 @@ function parse_course_info(course_code, data) {
                 const end = part_html(ends[j]);
                 const day = start.text()[0];
 
-                course_info[i - 1]["time"].push({
+                let same_time = false;
+                const time_object = {
                     start_time: convert_miliseconds(start.text().substring(1)),
                     end_time: convert_miliseconds(end.text().substring(1)),
                     day: weekday_map.get(parseInt(day))
-                });
+                };
+
+                for(let k = 0; k < course_info[i - 1]["time"].length; ++k) {
+                    if(JSON.stringify(course_info[i - 1]["time"][k]) == JSON.stringify(time_object)) {
+                        same_time = true;
+                    }
+                }
+
+                if(!same_time) {
+                    course_info[i - 1]["time"].push(time_object);
+                }
             }
         }
     }
@@ -181,6 +192,7 @@ function parse_course_info(course_code, data) {
     return course_info;
 }
 
+// convert miliseconds to 24 hour time
 function convert_miliseconds(time) {
     const miliseconds_per_day = 86400000;
     const hours_per_day = 24;
@@ -188,26 +200,4 @@ function convert_miliseconds(time) {
     return time / miliseconds_per_day * hours_per_day;
 }
 
-// app.post("/", (req, res) => {
-//     const {course} = req.body;
-
-//     const course_promise = get_matches(course);
-    
-//     course_promise.then(result => {
-//         let course_code = result[0].course_code;
-//         let course_name = result[0].course_name;
-//         let course_section = result[0].course_section;
-        
-//         get_course_info(course_code, course_name, course_section);
-//     });
-
-//     res.status(200).send({status: "received"})
-
-
-//     if(!course) {
-//         return res.status(400).send({status: "failed"})
-//     }
-//     res.status(200).send({status: "received"})
-// });
-
-app.listen(port, () => console.log("server started"));
+app.listen(port, () => console.log("Connected at http://localhost:" + port + "/"));

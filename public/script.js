@@ -86,28 +86,38 @@ function create_schedule() {
     if(!next_button) {
         return;
     }
-    
+
+    // calculate the number of total permutations
     total_permutations = permutations(counter);
     
+    // loop through all permutations
     for(let i = 0; i < total_permutations; ++i) {
         const temp_schedule = new Array();
         let conflict = false;
+
+        // initilize temporary schedule array with 5 days and 9 hours per day
         for(let j = 0; j < days_of_week.size; ++j) {
             temp_schedule[j] = new Array(max_hours_per_day);
         }
-        for(let j = 0; j < all_courses.length && !conflict; ++j) {
-            for(let k = 0; k < all_courses[j].length && !conflict; ++k) {
+
+        // loop through all the selected courses
+        for(let j = 0; j < all_courses.length; ++j) {
+            for(let k = 0; k < all_courses[j].length; ++k) {
     
+                // if the course type (lec, tut, pra) is not undefined
                 if(all_courses[j][k][counter[j * 3 + k].count] != undefined) {
                     const course = all_courses[j][k][counter[j * 3 + k].count];
                     const time = course.section.section_times;
     
-    
-                    for(let l = 0; l < time.length && !conflict; ++l) {
-                        for(let m = 0; m < time[l].duration && !conflict; ++m) {
+                    // loop through the times for the current course
+                    for(let l = 0; l < time.length; ++l) {
+                        for(let m = 0; m < time[l].duration; ++m) {
+
+                            // if the time slot is empty then add it to the schedule
                             if(!temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m]) {
                                 temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m] = course;
                             }
+                            // otherwise raise the conflic flag
                             else {
                                 conflict = true;
                             }
@@ -116,10 +126,12 @@ function create_schedule() {
                 }
             }
         }
-    
+
+        // if there were no conflicts then add it to the possible schedules
         if(!conflict) {
             schedule.push(temp_schedule);
         }
+        // go to the next possible permutation
         add_one(counter);
     }
 }
