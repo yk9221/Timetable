@@ -249,8 +249,12 @@ function course_found(course_code) {
     const course_info = get_info(course_code);
 
     course_info.then(result => {
+        // no result found
+        if(result.search("not found")) {
+            return;
+        }
         // multiple results found
-        if(JSON.parse(result)[0].course_name) {
+        else if(JSON.parse(result)[0].course_name) {
             multiple_searches(JSON.parse(result), course_code);
         }
         // one result found
@@ -416,7 +420,6 @@ function multiple_searches(results, search) {
     }
 }
 
-const course_data = new Array();
 const input_course_set = new Set();
 const course_code_map = new Map();
 const course_section_map = new Map([
