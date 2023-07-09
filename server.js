@@ -11,15 +11,23 @@ app.get("/:dynamic", (req, res) => {
     const course_promise = get_matches(key);
     
     course_promise.then(result => {
-        let course_code = result[0].course_code;
-        let course_name = result[0].course_name;
-        let course_section = result[0].course_section;
+        if(result.length == 0) {
+            res.status(404).send(key + " not found");
+        }
+        else if(result.length == 1){
+            let course_code = result[0].course_code;
+            let course_name = result[0].course_name;
+            let course_section = result[0].course_section;
+            
+            const course_info = get_course_info(course_code, course_name, course_section);
 
-        const course_info = get_course_info(course_code, course_name, course_section);
-
-        course_info.then(data => {
-            res.status(200).json(data);
-        });
+            course_info.then(data => {
+                res.status(200).json(data);
+            });
+        }
+        else {
+            res.status(200).send(result);
+        }
     });
 
 });
@@ -31,6 +39,9 @@ async function get_matches(course) {
     .then(response => response.text())
     .then(data => {
         course_list = parse_matches(data);
+    })
+    .catch(error => {
+        console.log(error);
     });
 
     return course_list;
@@ -98,13 +109,13 @@ function parse_matches(data) {
     const max_length = Math.max(code_elements.length, name_elements.length, section_elements.length);
 
     for(let i = 0; i < max_length; ++i) {
-        if(i < code_elements.length) {
-            const code_element = full_html(code_elements[i]);
-            const code_parent = code_element.parent();
+        if(i < section_elements.length) {
+            const section_element = full_html(section_elements[i]);
+            const section_parent = section_element.parent();
 
-            if(code_parent.get(0).tagName == "codesandtitles") {
-                course_list[i / 2] = {
-                    course_code: code_element.text()
+            if(section_parent.get(0).tagName == "codesandtitles") {
+                course_list[i] = {
+                    course_section: section_element.text()
                 };
             }
         }
@@ -112,16 +123,18 @@ function parse_matches(data) {
         if(i < name_elements.length) {
             const name_element = full_html(name_elements[i]);
             const name_parent = name_element.parent();
+
             if(name_parent.get(0).tagName == "codesandtitles") {
-                course_list[i / 2]["course_name"] = name_element.text();
+                course_list[i / 2] = Object.assign({course_name: name_element.text()}, course_list[i / 2]);
             }
         }
 
-        if(i < section_elements.length) {
-            const section_element = full_html(section_elements[i]);
-            const section_parent = section_element.parent();
-            if(section_parent.get(0).tagName == "codesandtitles") {
-                course_list[i / 2]["course_section"] = section_element.text();
+        if(i < code_elements.length) {
+            const code_element = full_html(code_elements[i]);
+            const code_parent = code_element.parent();
+
+            if(code_parent.get(0).tagName == "codesandtitles") {
+                course_list[i / 2] = Object.assign({course_code: code_element.text()}, course_list[i / 2]);
             }
         }
     }
@@ -200,4 +213,19 @@ function convert_miliseconds(time) {
     return time / miliseconds_per_day * hours_per_day;
 }
 
-app.listen(port, () => console.log("Connected at http://localhost:" + port + "/"));
+app.post("/", (req, res) => {
+    const course = req.body;
+
+    let course_code = course.course_code;
+    let course_name = course.course_name;
+    let course_section = course.course_section;
+    
+    const course_info = get_course_info(course_code, course_name, course_section);
+
+    course_info.then(data => {
+        res.status(200).json(data);
+    });
+
+});
+
+app.listen(port, () => console.log("Connected at http://localhost:" + port));
