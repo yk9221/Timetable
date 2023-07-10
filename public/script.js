@@ -250,23 +250,36 @@ function course_found(course_code) {
 
     course_info.then(result => {
         // no result found
-        if(result.search("not found")) {
-            return;
-        }
+        // if(result.search("not found")) {
+        //     return;
+        // }
         // multiple results found
-        else if(JSON.parse(result)[0].course_name) {
+        if(JSON.parse(result)[0].course_name) {
             multiple_searches(JSON.parse(result), course_code);
         }
         // one result found
         else {
-            add_course_to_storage(result, JSON.parse(result)[0].course_code);
+            const course_code = JSON.parse(result)[0].course_code;
+            add_course_to_storage(course_code);
+            add_course_data_to_storage(result, course_code);
+            add_new_element(course_code);
         }
     });
 
     return true;
 }
 
-function add_course_to_storage(result, course_code) {
+function add_course_to_storage(course_code) {
+    if(!localStorage.getItem("courses")) {
+        localStorage.setItem("courses", JSON.stringify(new Array()));
+    }
+
+    const arr = JSON.parse(localStorage.getItem("courses"));
+    arr.push(course_code);
+    localStorage.setItem("courses", JSON.stringify(arr));
+}
+
+function add_course_data_to_storage(result, course_code) {
     if(!localStorage.getItem("course_data")) {
         localStorage.setItem("course_data", JSON.stringify(new Array()));
     }
@@ -277,24 +290,6 @@ function add_course_to_storage(result, course_code) {
     console.log(course_code, "added to list");
 }
 
-function add_new_element(course_name) {
-    const course_list = document.querySelector(".course_list");
-    const item = document.createElement("li");
-    const remove = document.createElement("span");
-
-    remove.addEventListener("click", function() {
-        item.removeChild(remove);
-        course_list.removeChild(item);
-        input_course_set.delete(item.innerHTML);
-        localStorage.removeItem(item.innerHTML);
-    });
-
-    remove.appendChild(document.createTextNode("X"));
-    item.appendChild(document.createTextNode(course_name));
-    item.appendChild(remove);
-    course_list.appendChild(item);
-}
-
 function searched() {
     const search_text = document.querySelector(".search_text");
 
@@ -302,47 +297,64 @@ function searched() {
         return;
     }
 
-    // const courses = JSON.parse(localStorage.getItem("courses"));
-    // if(courses) {
-    //     for(let i = 0; i < courses.length; ++i) {
-    //         console.log(courses[i]);
-    //     }
-    // }
-
-    if(course_found(search_text.value) && !input_course_set.has(search_text.value)) {
-        if(!localStorage.getItem("courses")) {
-            localStorage.setItem("courses", JSON.stringify(new Array()));
-        }
-        const arr = JSON.parse(localStorage.getItem("courses"));
-        arr.push(search_text.value);
-        localStorage.setItem("courses", JSON.stringify(arr));
-        input_course_set.add(search_text.value);
-
-        add_new_element(search_text.value);
+    if(course_found(search_text.value)) {
+        
     }
 
     else {
         // course not found
     }
+    search_text.value = "";
+}
+
+function remove_element(remove, item, course_list) {
+    remove.addEventListener("click", function() {
+        const courses = JSON.parse(localStorage.getItem("courses"));
+        const course_data = JSON.parse(localStorage.getItem("course_data"));
+        
+        item.removeChild(remove);
+        course_list.removeChild(item);
+
+        for(let i = 0; i < courses.length; ++i) {
+            if(courses[i] == item.innerHTML) {
+                courses.splice(i, 1);
+                course_data.splice(i, 1);
+            }
+        }
+        localStorage.setItem("courses", JSON.stringify(courses));
+        localStorage.setItem("course_data", JSON.stringify(course_data));
+    });
+}
+
+function add_new_element(course_name) {
+    const course_list = document.querySelector(".course_list");
+    const item = document.createElement("li");
+    const remove = document.createElement("span");
+
+    remove_element(remove, item, course_list);
+
+    remove.appendChild(document.createTextNode("X"));
+    item.appendChild(document.createTextNode(course_name));
+    item.appendChild(remove);
+    course_list.appendChild(item);
+}
+
+function add_previous_elements() {
+    const course_list = document.querySelector(".course_list");
+    if(!course_list) {
+        return;
+    }
 
     const courses = JSON.parse(localStorage.getItem("courses"));
-    const num_of_elements = document.querySelector(".course_list").childElementCount;
+    const num_of_elements = course_list.childElementCount;
 
     if(courses && num_of_elements != courses.length) {
         for(let i = 0; i < courses.length; ++i) {
             const course_list = document.querySelector(".course_list");
             const item = document.createElement("li");
             const remove = document.createElement("span");
-    
-            remove.addEventListener("click", function() {
-                item.removeChild(remove);
-                course_list.removeChild(item);
-                input_course_set.delete(item.innerHTML);
-                localStorage.removeItem(item.innerHTML);
-    
-                console.log(localStorage);
-                console.log(input_course_set);
-            });
+
+            remove_element(remove, item, course_list);
     
             remove.appendChild(document.createTextNode("X"));
             item.appendChild(document.createTextNode(courses[i]));
@@ -350,8 +362,6 @@ function searched() {
             course_list.appendChild(item);
         }
     }
-
-    search_text.value = "";
 }
 
 function course_search() {
@@ -370,6 +380,20 @@ function course_search() {
     
     search_button.addEventListener("click", function() {
         searched();
+    });
+}
+
+function clear_local_storage() {
+    const clear_storage = document.querySelector(".clear_storage");
+    const course_list = document.querySelector(".course_list");
+
+    if(!clear_storage) {
+        return;
+    }
+
+    clear_storage.addEventListener("click", function() {
+        localStorage.clear();
+        course_list.innerHTML = "";
     });
 }
 
@@ -405,7 +429,10 @@ function multiple_searches(results, search) {
             search_results.innerHTML = "";
 
             selected_result.then(result => {
-                add_course_to_storage(result, results[i].course_code);
+                const course_code = results[i].course_code;
+                add_course_to_storage(course_code)
+                add_course_data_to_storage(result, course_code);
+                add_new_element(course_code);
             });
 
         });
@@ -420,7 +447,6 @@ function multiple_searches(results, search) {
     }
 }
 
-const input_course_set = new Set();
 const course_code_map = new Map();
 const course_section_map = new Map([
     ["LEC", 0],
@@ -458,5 +484,7 @@ parse_json();
 create_permutations();
 create_schedule();
 
+clear_local_storage();
 course_search();
+add_previous_elements();
 next_schedule_click();
