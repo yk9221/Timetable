@@ -245,7 +245,20 @@ async function get_info_selected(result) {
     return data;
 }
 
-function course_found(course_code) {
+function add_course(result, course_code) {
+    const courses = JSON.parse(localStorage.getItem("courses"));
+
+    if(!courses.includes(course_code)) {
+        add_course_to_storage(course_code);
+        add_course_data_to_storage(result, course_code);
+        add_new_element(course_code);
+    }
+    else {
+        alert(course_code + " already exists");
+    }
+}
+
+function find_course(course_code) {
     const course_info = get_info(course_code);
 
     course_info.then(result => {
@@ -259,14 +272,9 @@ function course_found(course_code) {
         }
         // one result found
         else {
-            const course_code = JSON.parse(result)[0].course_code;
-            add_course_to_storage(course_code);
-            add_course_data_to_storage(result, course_code);
-            add_new_element(course_code);
+            add_course(result, JSON.parse(result)[0].course_code);
         }
     });
-
-    return true;
 }
 
 function add_course_to_storage(course_code) {
@@ -297,13 +305,8 @@ function searched() {
         return;
     }
 
-    if(course_found(search_text.value)) {
-        
-    }
+    find_course(search_text.value);
 
-    else {
-        // course not found
-    }
     search_text.value = "";
 }
 
@@ -429,10 +432,7 @@ function multiple_searches(results, search) {
             search_results.innerHTML = "";
 
             selected_result.then(result => {
-                const course_code = results[i].course_code;
-                add_course_to_storage(course_code)
-                add_course_data_to_storage(result, course_code);
-                add_new_element(course_code);
+                add_course(result, results[i].course_code);
             });
 
         });
