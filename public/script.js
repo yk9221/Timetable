@@ -247,33 +247,47 @@ async function get_info_selected(result) {
 
 function add_course(result, course_code) {
     const courses = JSON.parse(localStorage.getItem("courses"));
+    const searching_load_screen = document.querySelector(".searching_load_screen");
 
-    if(!courses.includes(course_code)) {
+    if(!courses || !courses.includes(course_code)) {
+        searching_load_screen.innerHTML = "Added " + course_code + " to list";
         add_course_to_storage(course_code);
-        add_course_data_to_storage(result, course_code);
+        add_course_data_to_storage(result);
         add_new_element(course_code);
     }
     else {
-        alert(course_code + " already exists");
+        searching_load_screen.innerHTML = course_code + " already exists";
     }
 }
 
 function find_course(course_code) {
     const course_info = get_info(course_code);
+    const loading = document.querySelector(".loading");
+    const searching_load_screen = document.querySelector(".searching_load_screen");
 
     course_info.then(result => {
         // no result found
-        // if(result.search("not found")) {
-        //     return;
-        // }
+        if(result.search("not found") != -1) {
+            const index = result.search("not found");
+
+            loading.style.display = "flex";
+            searching_load_screen.innerHTML = result.substring(0, index) + " not found!";
+        }
         // multiple results found
-        if(JSON.parse(result)[0].course_name) {
+        else if(JSON.parse(result)[0].course_name) {
             multiple_searches(JSON.parse(result), course_code);
+
+            return;
         }
         // one result found
         else {
             add_course(result, JSON.parse(result)[0].course_code);
         }
+
+        setTimeout(function() {
+            loading.style.display = "none";
+            searching_load_screen.innerHTML = "";
+        }, 1500);
     });
 }
 
@@ -287,23 +301,26 @@ function add_course_to_storage(course_code) {
     localStorage.setItem("courses", JSON.stringify(arr));
 }
 
-function add_course_data_to_storage(result, course_code) {
+function add_course_data_to_storage(result) {
     if(!localStorage.getItem("course_data")) {
         localStorage.setItem("course_data", JSON.stringify(new Array()));
     }
     const arr = JSON.parse(localStorage.getItem("course_data"));
     arr.push(JSON.parse(result));
     localStorage.setItem("course_data", JSON.stringify(arr));
-
-    console.log(course_code, "added to list");
 }
 
 function searched() {
     const search_text = document.querySelector(".search_text");
+    const loading = document.querySelector(".loading");
+    const searching_load_screen = document.querySelector(".searching_load_screen");
 
-    if(!search_text) {
+    if(!search_text || !loading || !searching_load_screen) {
         return;
     }
+
+    loading.style.display = "flex";
+    searching_load_screen.innerHTML = "Searching for " + search_text.value + "...";
 
     find_course(search_text.value);
 
@@ -403,10 +420,13 @@ function clear_local_storage() {
 function multiple_searches(results, search) {
     const pop_up = document.querySelector(".pop_up");
     const search_results = document.querySelector(".search_results");
+    const loading = document.querySelector(".loading");
+    const searching_load_screen = document.querySelector(".searching_load_screen");
     const searched = document.createElement("label");
     const close = document.createElement("button");
 
     pop_up.style.display = "flex";
+    loading.style.display = "none";
 
     searched.appendChild(document.createTextNode("Search results for " + search));
     search_results.appendChild(searched);
@@ -423,16 +443,23 @@ function multiple_searches(results, search) {
         const item = document.createElement("li");
         item.style.cursor = "pointer";
         
-        item.appendChild(document.createTextNode(results[i].course_code + ": " + results[i].course_name));
+        item.appendChild(document.createTextNode(results[i].course_code + " " + results[i].course_section + ": " + results[i].course_name));
         search_results.appendChild(item);
 
         item.addEventListener("click", function() {
             const selected_result = get_info_selected(results[i]);
             pop_up.style.display = "none";
             search_results.innerHTML = "";
+            loading.style.display = "flex";
+            searching_load_screen.innerHTML = "";
 
             selected_result.then(result => {
                 add_course(result, results[i].course_code);
+
+                setTimeout(function() {
+                    loading.style.display = "none";
+                    searching_load_screen.innerHTML = "";
+                }, 1500);
             });
 
         });
