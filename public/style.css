@@ -19,7 +19,7 @@ th, td {
 .course_search {
     width: 20%;
     position: absolute;
-    top: 30%;
+    top: 25%;
     left: 50%;
     background-color: aliceblue;
     border-radius: 60px;
@@ -47,7 +47,7 @@ th, td {
     width: 100%;
 }
 
-.save_button {
+/* .save_button {
     display: none;
     color: black;
     text-align: center;
@@ -64,7 +64,7 @@ th, td {
     padding: 15px 32px;
     text-align: center;
     font-size: 16px;
-}
+} */
 
 .side_bar {
     height: 100%;
@@ -130,7 +130,7 @@ th, td {
     align-items: center;
 }
 
-.search_results {
+.pop_up_results {
     width: 50%;
     height: 40%;
     transform: translate(15%, 0%);
@@ -142,11 +142,11 @@ th, td {
     list-style-type: none;
 }
 
-.search_results li {
+.pop_up_results li {
     margin: 10px;
 }
 
-.search_results button {
+.pop_up_results button {
     position: absolute;
     top: 2%;
     right: 1%;
@@ -187,4 +187,8 @@ th, td {
 
 .searching_load_screen button {
     color: red;
+}
+
+.filter {
+    cursor: pointer;
 }

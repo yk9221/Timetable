@@ -44,12 +44,11 @@ class LimitNode {
 
 function parse_json() {
     const next_button = document.querySelector(".next_course");
+    const arr = JSON.parse(localStorage.getItem("course_data"));
 
-    if(!next_button) {
+    if(!next_button || !arr) {
         return;
     }
-
-    const arr = JSON.parse(localStorage.getItem("course_data"));
 
     for(let i = 0; i < arr.length; ++i) {
         for(let j = 0; j < arr[i].length; ++j) {
@@ -83,10 +82,11 @@ function create_permutations() {
 function create_schedule() {
     const next_button = document.querySelector(".next_course");
 
-    if(!next_button) {
+    if(!next_button || all_courses.length == 0) {
         return;
     }
 
+    
     // calculate the number of total permutations
     total_permutations = permutations(counter);
     
@@ -166,17 +166,14 @@ function print_schedule(schedule) {
     const table = document.querySelector(".table");
     const save_button = document.querySelector(".save_button");
 
-    if(!table || !save_button) {
+    if(!table || !save_button || !schedule) {
         return;
     }
 
     table.style.display = "block";
-    save_button.style.display = "block";
 
     save_button.addEventListener("click", function() {
         localStorage.setItem("saved", JSON.stringify(schedule));
-        let arr = JSON.parse(localStorage.getItem("saved"));
-        print_on_table(arr);
     });
 
     print_on_table(schedule);
@@ -186,11 +183,6 @@ function print_on_table(schedule) {
     const table = document.querySelector(".table");
 
     if(!table) {
-        return;
-    }
-
-    if(!schedule) {
-        console.log("No schedule");
         return;
     }
 
@@ -208,18 +200,48 @@ function print_on_table(schedule) {
     }
 }
 
-function next_schedule_click() {
+function next_schedule(caption) {
+    possibility_count++;
+    if(possibility_count % (schedule.length + 1) == 0) {
+        possibility_count++;
+    }
+
+    console.log(possibility_count % (schedule.length + 1) - 1)
+    console.log(schedule[possibility_count % (schedule.length + 1) - 1])
+    print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
+    caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
+}
+
+function previous_schedule(caption) {
+    possibility_count--;
+    if(possibility_count % (schedule.length + 1) == 0) {
+        possibility_count--;
+    }
+    if(possibility_count % (schedule.length + 1) < 0) {
+        possibility_count += schedule.length + 1;
+    }
+
+    console.log(possibility_count % (schedule.length + 1) - 1)
+    console.log(schedule[possibility_count % (schedule.length + 1) - 1])
+    print_schedule(schedule[possibility_count % schedule.length - 1]);
+    caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
+}
+
+function schedule_click() {
     const next_button = document.querySelector(".next_course");
+    const prev_button = document.querySelector(".previous_course");
     const caption = document.querySelector(".table_caption");
 
-    if(!next_button || !caption) {
+    if(!next_button || !caption || !prev_button) {
         return;
     }
 
     next_button.addEventListener("click", function() {
-        print_schedule(schedule[possibility_count % schedule.length]);
-        caption.innerHTML = "Timetable " + (possibility_count % schedule.length + 1) + "/" + schedule.length;
-        possibility_count++;
+        next_schedule(caption);
+    });
+
+    prev_button.addEventListener("click", function() {
+        previous_schedule(caption);
     });
 }
 
@@ -419,7 +441,7 @@ function clear_local_storage() {
 
 function multiple_searches(results, search) {
     const pop_up = document.querySelector(".pop_up");
-    const search_results = document.querySelector(".search_results");
+    const pop_up_results = document.querySelector(".pop_up_results");
     const loading = document.querySelector(".loading");
     const searching_load_screen = document.querySelector(".searching_load_screen");
     const searched = document.createElement("label");
@@ -429,14 +451,15 @@ function multiple_searches(results, search) {
     loading.style.display = "none";
 
     searched.appendChild(document.createTextNode("Search results for " + search));
-    search_results.appendChild(searched);
+    searched.style.fontWeight = "bold";
+    pop_up_results.appendChild(searched);
 
     close.appendChild(document.createTextNode("X"));
-    search_results.appendChild(close);
+    pop_up_results.appendChild(close);
 
     close.addEventListener("click", function() {
         pop_up.style.display = "none";
-        search_results.innerHTML = "";
+        pop_up_results.innerHTML = "";
     });
 
     for(let i = 0; i < results.length; ++i) {
@@ -444,12 +467,12 @@ function multiple_searches(results, search) {
         item.style.cursor = "pointer";
         
         item.appendChild(document.createTextNode(results[i].course_code + " " + results[i].course_section + ": " + results[i].course_name));
-        search_results.appendChild(item);
+        pop_up_results.appendChild(item);
 
         item.addEventListener("click", function() {
             const selected_result = get_info_selected(results[i]);
             pop_up.style.display = "none";
-            search_results.innerHTML = "";
+            pop_up_results.innerHTML = "";
             loading.style.display = "flex";
             searching_load_screen.innerHTML = "";
 
@@ -474,6 +497,127 @@ function multiple_searches(results, search) {
     }
 }
 
+function add_filter_to_storage(type, element) {
+    if(!localStorage.getItem(type)) {
+        localStorage.setItem(type, JSON.stringify(new Array()));
+    }
+
+    const arr = JSON.parse(localStorage.getItem(type));
+    arr.push(element);
+    localStorage.setItem(type, JSON.stringify(arr));
+}
+
+function remove_filter_from_storage(type, element) {
+    if(!localStorage.getItem(type)) {
+        return;
+    }
+
+    const arr = JSON.parse(localStorage.getItem(type));
+    const index = arr.indexOf(element);
+
+    if(index != -1) {
+        arr.splice(index, 1);
+    }
+
+    localStorage.setItem(type, JSON.stringify(arr));
+}
+
+function find_filter_in_storage(type, element) {
+    if(!localStorage.getItem(type)) {
+        return false;
+    }
+
+    const arr = JSON.parse(localStorage.getItem(type));
+    const index = arr.indexOf(element);
+
+    if(index != -1) {
+        return true;
+    }
+
+    return false;
+}
+
+function open_filter() {
+    const filter = document.querySelector(".filter");
+    const pop_up = document.querySelector(".pop_up");
+    const pop_up_results = document.querySelector(".pop_up_results");
+    
+    filter.addEventListener("click", function() {
+        const faculty_label = document.createElement("label");
+        const session_label = document.createElement("label");
+        const close_filter = document.createElement("button");
+
+        pop_up.style.display = "flex";
+        pop_up_results.style.display = "grid";
+
+        close_filter.appendChild(document.createTextNode("X"));
+        pop_up_results.appendChild(close_filter);
+
+        faculty_label.appendChild(document.createTextNode("Faculty"));
+        faculty_label.style.fontWeight = "bold";
+        pop_up_results.appendChild(faculty_label);
+
+        for(let i = 0; i < faculty_list.length; ++i) {
+            const check_box = document.createElement("input");
+            const check_box_label = document.createElement("label");
+
+            check_box.type = "checkbox";
+            check_box.checked = find_filter_in_storage("faculty", faculty_list[i]);
+            check_box_label.appendChild(check_box);
+            check_box_label.appendChild(document.createTextNode(faculty_list[i]));
+
+            pop_up_results.appendChild(check_box_label);
+
+            check_box.addEventListener("change", function() {
+                if(check_box.checked) {
+                    add_filter_to_storage("faculty", faculty_list[i]);
+                }
+                else {
+                    remove_filter_from_storage("faculty", faculty_list[i]);
+                }
+            });
+        }
+
+        session_label.appendChild(document.createTextNode("Session"));
+        session_label.style.fontWeight = "bold";
+        pop_up_results.appendChild(session_label);
+
+        for(let i = 0; i < session_list.length; ++i) {
+            const check_box = document.createElement("input");
+            const check_box_label = document.createElement("label");
+
+            check_box.type = "checkbox";
+            check_box.checked = find_filter_in_storage("session", session_list[i]);
+            check_box_label.appendChild(check_box);
+            check_box_label.appendChild(document.createTextNode(session_list[i]));
+
+            pop_up_results.appendChild(check_box_label);
+
+            check_box.addEventListener("change", function() {
+                if(check_box.checked) {
+                    add_filter_to_storage("session", session_list[i]);
+                }
+                else {
+                    remove_filter_from_storage("session", session_list[i]);
+                }
+            });
+        }
+
+        close_filter.addEventListener("click", function() {
+            pop_up.style.display = "none";
+            pop_up_results.innerHTML = "";
+        });
+    });
+
+    filter.addEventListener("mouseover", function() {
+        filter.style.color = "blue";
+    });
+
+    filter.addEventListener("mouseout", function() {
+        filter.style.color = "black";
+    });
+}
+
 const course_code_map = new Map();
 const course_section_map = new Map([
     ["LEC", 0],
@@ -496,6 +640,18 @@ const colors = new Map([
     [5, "blue"],
     [6, "red"]
 ]);
+const faculty_list = [
+    "Faculty of Applied Science & Engineering",
+    "Faculty of Arts and Science",
+    "Faculty of Kinesiology and Physical Education",
+    "Faculty of Music",
+    "John H. Daniels Faculty of Architecture, Landscape, & Design"
+];
+const session_list = [
+    "Fall 2023 (F)",
+    "Winter 2024 (S)",
+    "Fall-Winter 2023-2024 (Y)"
+];
 
 const baseUrl = "http://localhost:3000/";
 
@@ -514,4 +670,5 @@ create_schedule();
 clear_local_storage();
 course_search();
 add_previous_elements();
-next_schedule_click();
+schedule_click();
+open_filter();

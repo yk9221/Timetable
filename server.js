@@ -35,7 +35,7 @@ app.get("/:dynamic", (req, res) => {
 async function get_matches(course) {
     let course_list;
 
-    const url = "https://api.easi.utoronto.ca/ttb/getOptimizedMatchingCourseTitles?term=" + course + "&divisions=APSC&divisions=ARTSC&divisions=FPEH&divisions=MUSIC&divisions=ARCLA&divisions=ERIN&divisions=SCAR&sessions=Fall-Winter&sessions=20239&lowerThreshold=50&upperThreshold=200";
+    const url = "https://api.easi.utoronto.ca/ttb/getOptimizedMatchingCourseTitles?term=" + course + "&divisions=APSC&divisions=ARTSC&sessions=20239&sessions=20241&sessions=20239-20241&lowerThreshold=50&upperThreshold=200";
 
     await fetch(url)
     .then(response => response.text())
@@ -66,14 +66,14 @@ async function get_course_info(course_code, course_name, course_section) {
             },
             "departmentProps": [],
             "campuses": [],
-            "sessions": ["20239", "20239-20241"],
+            "sessions": ["20239", "20241", "20239-20241"],
             "requirementProps": [],
             "instructor": "",
             "courseLevels": [],
             "deliveryModes": [],
             "dayPreferences": [],
             "timePreferences": [],
-            "divisions": ["APSC", "ARTSC", "FPEH", "MUSIC", "ARCLA", "ERIN", "SCAR"],
+            "divisions": ["APSC", "ARTSC"],
             "creditWeights": [],
             "page": 1,
             "pageSize": 20,
