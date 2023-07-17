@@ -45,9 +45,9 @@ class LimitNode {
 function parse_json() {
     const next_button = document.querySelector(".next_course");
     const arr = JSON.parse(localStorage.getItem("course_data"));
-    const exclude = JSON.parse(localStorage.getItem("exclude"))
-
-    if(!next_button || !arr || !exclude) {
+    const exclude = JSON.parse(localStorage.getItem("exclude"));
+    
+    if(!next_button || !arr) {
         return;
     }
 
@@ -69,11 +69,13 @@ function parse_json() {
             }
 
             let remove = false;
-            for(let k = 0; k < exclude.length; ++k) {
-                if(exclude[k].course_code == code &&
-                    exclude[k].teach_method == type &&
-                    exclude[k].section_number == num) {
-                        remove = true;
+            if(exclude) {
+                for(let k = 0; k < exclude.length; ++k) {
+                    if(exclude[k].course_code == code &&
+                        exclude[k].teach_method == type &&
+                        exclude[k].section_number == num) {
+                            remove = true;
+                    }
                 }
             }
 
@@ -287,6 +289,32 @@ async function get_info(course_code) {
 }
 
 async function get_info_selected(result) {
+    if(!localStorage.getItem("faculty")) {
+        result.faculty = new Array(faculty_list_map.get(faculty_list[0]));
+    }
+    else {
+        const arr = JSON.parse(localStorage.getItem("faculty"));
+        result.faculty = new Array();
+
+        for(let i = 0; i < arr.length; ++i) {
+            result.faculty.push(faculty_list_map.get(arr[i]));
+        }
+    }
+
+    if(!localStorage.getItem("session")) {
+        result.session = new Array(session_list_map.get(session_list[0]));
+    }
+    else {
+        const arr = JSON.parse(localStorage.getItem("session"));
+        result.session = new Array();
+
+        for(let i = 0; i < arr.length; ++i) {
+            result.session.push(session_list_map.get(arr[i]));
+        }
+    }
+
+    console.log(result)
+
     const res = await fetch(baseUrl, {
         method: "POST",
         headers: {
@@ -304,10 +332,10 @@ function add_course(result, course_code) {
     const searching_load_screen = document.querySelector(".searching_load_screen");
 
     if(!courses || !courses.includes(course_code)) {
-        searching_load_screen.innerHTML = "Added " + course_code + " to list";
+        searching_load_screen.innerHTML = "Added " + course_code + " " + JSON.parse(result)[0].course_section + " to list";
         add_course_to_storage(course_code);
         add_course_data_to_storage(result);
-        add_new_element(course_code);
+        add_new_element(course_code, JSON.parse(result)[0].course_section);
     }
     else {
         searching_load_screen.innerHTML = course_code + " already exists";
@@ -400,7 +428,7 @@ function remove_element(remove, item, course_list) {
     });
 }
 
-function add_new_element(course_name) {
+function add_new_element(course_name, course_section) {
     const course_list = document.querySelector(".course_list");
     const item = document.createElement("li");
     const remove = document.createElement("span");
@@ -408,7 +436,7 @@ function add_new_element(course_name) {
     remove_element(remove, item, course_list);
 
     remove.appendChild(document.createTextNode("X"));
-    item.appendChild(document.createTextNode(course_name));
+    item.appendChild(document.createTextNode(course_name + " " + course_section));
     item.appendChild(remove);
     course_list.appendChild(item);
 }
@@ -672,7 +700,6 @@ function open_filter() {
         const close_filter = document.createElement("button");
 
         pop_up.style.display = "flex";
-        pop_up_results.style.display = "grid";
 
         close_filter.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_filter);
@@ -682,6 +709,7 @@ function open_filter() {
         pop_up_results.appendChild(faculty_label);
 
         for(let i = 0; i < faculty_list.length; ++i) {
+            const list = document.createElement("li");
             const check_box = document.createElement("input");
             const check_box_label = document.createElement("label");
 
@@ -689,8 +717,9 @@ function open_filter() {
             check_box.checked = find_filter_in_storage("faculty", faculty_list[i]);
             check_box_label.appendChild(check_box);
             check_box_label.appendChild(document.createTextNode(faculty_list[i]));
+            list.appendChild(check_box_label);
 
-            pop_up_results.appendChild(check_box_label);
+            pop_up_results.appendChild(list);
 
             check_box.addEventListener("change", function() {
                 if(check_box.checked) {
@@ -707,6 +736,7 @@ function open_filter() {
         pop_up_results.appendChild(session_label);
 
         for(let i = 0; i < session_list.length; ++i) {
+            const list = document.createElement("li");
             const check_box = document.createElement("input");
             const check_box_label = document.createElement("label");
 
@@ -714,8 +744,9 @@ function open_filter() {
             check_box.checked = find_filter_in_storage("session", session_list[i]);
             check_box_label.appendChild(check_box);
             check_box_label.appendChild(document.createTextNode(session_list[i]));
+            list.appendChild(check_box_label);
 
-            pop_up_results.appendChild(check_box_label);
+            pop_up_results.appendChild(list);
 
             check_box.addEventListener("change", function() {
                 if(check_box.checked) {
@@ -752,14 +783,14 @@ function open_exclude() {
     }
     
     exclude.addEventListener("click", function() {
-        const close_exclude = document.createElement("button");
-        let course_data = new Array();
-        if(localStorage.course_data) {
-            course_data = sort_course_data(JSON.parse(localStorage.course_data));
+        if(!localStorage.getItem("course_data")) {
+            return;
         }
 
+        const close_exclude = document.createElement("button");
+        const course_data = sort_course_data(JSON.parse(localStorage.course_data));
+
         pop_up.style.display = "flex";
-        pop_up_results.style.display = "grid";
 
         close_exclude.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_exclude);
@@ -773,15 +804,19 @@ function open_exclude() {
                     course_label.appendChild(document.createTextNode(course_data[i][j].course_code));
                     pop_up_results.appendChild(course_label);
                 }
+
+                const list = document.createElement("li");
                 const check_box = document.createElement("input");
                 const check_box_label = document.createElement("label");
+
                 check_box.type = "checkbox";
                 check_box.checked = !find_exclude_in_storage("exclude", course_data[i][j]);
                 check_box_label.style.marginBottom = "3%";
                 check_box_label.appendChild(check_box);
                 check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number));
+                list.appendChild(check_box_label);
 
-                pop_up_results.appendChild(check_box_label);
+                pop_up_results.appendChild(list);
                 check_box.addEventListener("change", function() {
                     if(!check_box.checked) {
                         add_exclude_to_storage("exclude", course_data[i][j]);

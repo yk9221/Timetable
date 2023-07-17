@@ -108,7 +108,7 @@ async function get_course_info(course_code, course_name, course_section, faculty
         }
     })
     .then(data => {
-        course_info = parse_course_info(course_code, data);
+        course_info = parse_course_info(course_code, data, course_section);
     })
     .catch(error => {
         console.log("Error: ", error);
@@ -163,7 +163,7 @@ function parse_matches(data) {
     return course_list;
 }
 
-function parse_course_info(course_code, data) {
+function parse_course_info(course_code, data, course_section) {
     const cheerio = require("cheerio");
 
     const weekday_map = new Map([
@@ -192,6 +192,7 @@ function parse_course_info(course_code, data) {
 
             course_info[i - 1] = {
                 course_code: course_code,
+                course_section: course_section,
                 teach_method: teach_method.text(),
                 section_number: section_number.text()
             };
@@ -237,11 +238,14 @@ function convert_miliseconds(time) {
 app.post("/", (req, res) => {
     const course = req.body;
 
-    let course_code = course.course_code;
-    let course_name = course.course_name;
-    let course_section = course.course_section;
+    const course_code = course.course_code;
+    const course_name = course.course_name;
+    const course_section = course.course_section;
+    const faculty = course.faculty;
+    const session = course.session;
+
     
-    const course_info = get_course_info(course_code, course_name, course_section);
+    const course_info = get_course_info(course_code, course_name, course_section, faculty, session);
 
     course_info.then(data => {
         res.status(200).json(data);
