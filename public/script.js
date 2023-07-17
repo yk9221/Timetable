@@ -184,7 +184,6 @@ function print_schedule(schedule) {
         return;
     }
 
-    table.style.display = "block";
 
     save_button.addEventListener("click", function() {
         localStorage.setItem("saved", JSON.stringify(schedule));
@@ -221,6 +220,7 @@ function next_schedule(caption) {
     }
 
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
+    caption.style.fontWeight = "bold";
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
 
@@ -234,6 +234,7 @@ function previous_schedule(caption) {
     }
 
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
+    caption.style.fontWeight = "bold";
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
 
@@ -241,6 +242,8 @@ function schedule_click() {
     const next_button = document.querySelector(".next_course");
     const prev_button = document.querySelector(".previous_course");
     const caption = document.querySelector(".table_caption");
+
+    next_schedule(caption);
 
     if(!next_button || !caption || !prev_button) {
         return;
@@ -270,7 +273,7 @@ async function get_info(course_code) {
     }
 
     if(!localStorage.getItem("session")) {
-        url += "&session=" + session_list_map.get(session_list[0]);
+        url += "&session=" + session_list_map.get(session_list[0]) + "&session=" + session_list_map.get(session_list[2]);
     }
     else {
         const arr = JSON.parse(localStorage.getItem("session"));
@@ -313,8 +316,6 @@ async function get_info_selected(result) {
         }
     }
 
-    console.log(result)
-
     const res = await fetch(baseUrl, {
         method: "POST",
         headers: {
@@ -327,15 +328,39 @@ async function get_info_selected(result) {
     return data;
 }
 
-function add_course(result, course_code) {
+function add_course(result, course_code, course_term) {
     const courses = JSON.parse(localStorage.getItem("courses"));
     const searching_load_screen = document.querySelector(".searching_load_screen");
 
+    if(!localStorage.getItem("course_term")) {
+        if(course_term == "Y") {
+            localStorage.setItem("course_term", "F");
+        }
+        else {
+            localStorage.setItem("course_term", course_term);
+        }
+    }
+
+    if(course_term == "Y") {
+        if(!localStorage.getItem("year_course")) {
+            localStorage.setItem("year_course", JSON.stringify(new Array()));
+        }
+        const arr = JSON.parse(localStorage.getItem("year_course"));
+        arr.push(course_code);
+        
+        localStorage.setItem("year_course", JSON.stringify(arr));
+    }
+    
+    if(course_term != localStorage.getItem("course_term") && course_term != "Y") {
+        searching_load_screen.innerHTML = "Cannot have both fall and winter term courses";
+        return;
+    }
+
     if(!courses || !courses.includes(course_code)) {
-        searching_load_screen.innerHTML = "Added " + course_code + " " + JSON.parse(result)[0].course_section + " to list";
+        searching_load_screen.innerHTML = "Added " + course_code + " " + course_term + " to list";
         add_course_to_storage(course_code);
         add_course_data_to_storage(result);
-        add_new_element(course_code, JSON.parse(result)[0].course_section);
+        add_new_element(course_code, course_term);
     }
     else {
         searching_load_screen.innerHTML = course_code + " already exists";
@@ -363,7 +388,34 @@ function find_course(course_code) {
         }
         // one result found
         else {
-            add_course(result, JSON.parse(result)[0].course_code);
+            const course_code = JSON.parse(result)[0].course_code;
+            const course_term = JSON.parse(result)[0].course_term;
+
+            if(!localStorage.getItem("course_term")) {
+                if(course_term == "Y") {
+                    localStorage.setItem("course_term", "F");
+                }
+                else {
+                    localStorage.setItem("course_term", course_term);
+                }
+            }
+
+            if(course_term == "Y") {
+                if(!localStorage.getItem("year_course")) {
+                    localStorage.setItem("year_course", JSON.stringify(new Array()));
+                }
+                const arr = JSON.parse(localStorage.getItem("year_course"));
+                arr.push(course_code);
+                
+                localStorage.setItem("year_course", JSON.stringify(arr));
+            }
+            
+            if(course_term != localStorage.getItem("course_term") && course_term != "Y") {
+                searching_load_screen.innerHTML = "Cannot have both fall and winter term courses";
+            }
+            else {
+                add_course(result, course_code, course_term);
+            }
         }
 
         setTimeout(function() {
@@ -428,7 +480,7 @@ function remove_element(remove, item, course_list) {
     });
 }
 
-function add_new_element(course_name, course_section) {
+function add_new_element(course_name, course_term) {
     const course_list = document.querySelector(".course_list");
     const item = document.createElement("li");
     const remove = document.createElement("span");
@@ -436,7 +488,7 @@ function add_new_element(course_name, course_section) {
     remove_element(remove, item, course_list);
 
     remove.appendChild(document.createTextNode("X"));
-    item.appendChild(document.createTextNode(course_name + " " + course_section));
+    item.appendChild(document.createTextNode(course_name + " " + course_term));
     item.appendChild(remove);
     course_list.appendChild(item);
 }
@@ -456,10 +508,22 @@ function add_previous_elements() {
             const item = document.createElement("li");
             const remove = document.createElement("span");
 
+            const year_course = JSON.parse(localStorage.getItem("year_course"));
+            let course_term = localStorage.getItem("course_term");
+
+            if(year_course) {
+                for(let j = 0; j < year_course.length; ++j) {
+                    if(year_course[j] == courses[i]) {
+                        course_term = "Y";
+                        break;
+                    }
+                }
+            }
+
             remove_element(remove, item, course_list);
     
             remove.appendChild(document.createTextNode("X"));
-            item.appendChild(document.createTextNode(courses[i]));
+            item.appendChild(document.createTextNode(courses[i] + " " + course_term));
             item.appendChild(remove);
             course_list.appendChild(item);
         }
@@ -530,7 +594,7 @@ function multiple_searches(results, search) {
         const item = document.createElement("li");
         item.style.cursor = "pointer";
         
-        item.appendChild(document.createTextNode(results[i].course_code + " " + results[i].course_section + ": " + results[i].course_name));
+        item.appendChild(document.createTextNode(results[i].course_code + " " + results[i].course_term + ": " + results[i].course_name));
         pop_up_results.appendChild(item);
 
         item.addEventListener("click", function() {
@@ -541,7 +605,7 @@ function multiple_searches(results, search) {
             searching_load_screen.innerHTML = "";
 
             selected_result.then(result => {
-                add_course(result, results[i].course_code);
+                add_course(result, results[i].course_code, results[i].course_term);
 
                 setTimeout(function() {
                     loading.style.display = "none";

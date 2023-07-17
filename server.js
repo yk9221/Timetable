@@ -26,9 +26,9 @@ app.get("/:dynamic", (req, res) => {
         else if(result.length == 1){
             let course_code = result[0].course_code;
             let course_name = result[0].course_name;
-            let course_section = result[0].course_section;
+            let course_term = result[0].course_term;
             
-            const course_info = get_course_info(course_code, course_name, course_section, faculty, session);
+            const course_info = get_course_info(course_code, course_name, course_term, faculty, session);
 
             course_info.then(data => {
                 res.status(200).json(data);
@@ -68,7 +68,7 @@ async function get_matches(course, faculty, session) {
     return course_list;
 }
 
-async function get_course_info(course_code, course_name, course_section, faculty, session) {
+async function get_course_info(course_code, course_name, course_term, faculty, session) {
     let course_info;
 
     await fetch("https://api.easi.utoronto.ca/ttb/getPageableCourses", {
@@ -80,7 +80,7 @@ async function get_course_info(course_code, course_name, course_section, faculty
             "courseCodeAndTitleProps":{
                 "courseCode": course_code,
                 "courseTitle": course_name,
-                "courseSectionCode": course_section,
+                "courseSectionCode": course_term,
                 "searchCourseDescription": false
             },
             "departmentProps": [],
@@ -108,7 +108,7 @@ async function get_course_info(course_code, course_name, course_section, faculty
         }
     })
     .then(data => {
-        course_info = parse_course_info(course_code, data, course_section);
+        course_info = parse_course_info(course_code, data, course_term);
     })
     .catch(error => {
         console.log("Error: ", error);
@@ -136,7 +136,7 @@ function parse_matches(data) {
 
             if(section_parent.get(0).tagName == "codesandtitles") {
                 course_list[i] = {
-                    course_section: section_element.text()
+                    course_term: section_element.text()
                 };
             }
         }
@@ -163,7 +163,7 @@ function parse_matches(data) {
     return course_list;
 }
 
-function parse_course_info(course_code, data, course_section) {
+function parse_course_info(course_code, data, course_term) {
     const cheerio = require("cheerio");
 
     const weekday_map = new Map([
@@ -192,7 +192,7 @@ function parse_course_info(course_code, data, course_section) {
 
             course_info[i - 1] = {
                 course_code: course_code,
-                course_section: course_section,
+                course_term: course_term,
                 teach_method: teach_method.text(),
                 section_number: section_number.text()
             };
@@ -240,12 +240,12 @@ app.post("/", (req, res) => {
 
     const course_code = course.course_code;
     const course_name = course.course_name;
-    const course_section = course.course_section;
+    const course_term = course.course_term;
     const faculty = course.faculty;
     const session = course.session;
 
     
-    const course_info = get_course_info(course_code, course_name, course_section, faculty, session);
+    const course_info = get_course_info(course_code, course_name, course_term, faculty, session);
 
     course_info.then(data => {
         res.status(200).json(data);
