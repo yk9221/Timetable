@@ -45,8 +45,9 @@ class LimitNode {
 function parse_json() {
     const next_button = document.querySelector(".next_course");
     const arr = JSON.parse(localStorage.getItem("course_data"));
+    const exclude = JSON.parse(localStorage.getItem("exclude"))
 
-    if(!next_button || !arr) {
+    if(!next_button || !arr || !exclude) {
         return;
     }
 
@@ -66,7 +67,20 @@ function parse_json() {
                 course_code_map.set(code, course_count);
                 course_count++;
             }
-            all_courses[course_code_map.get(code)][course_section_map.get(type)].push(new Course(code, new Section(type, num, time)));
+
+            let remove = false;
+            console.log(exclude)
+            for(let k = 0; k < exclude.length; ++k) {
+                if(exclude[k].course_code == code &&
+                    exclude[k].teach_method == type &&
+                    exclude[k].section_number == num) {
+                        remove = true;
+                }
+            }
+
+            if(!remove) {
+                all_courses[course_code_map.get(code)][course_section_map.get(type)].push(new Course(code, new Section(type, num, time)));
+            }
         }
     }
 }
@@ -471,6 +485,10 @@ function multiple_searches(results, search) {
     const searched = document.createElement("label");
     const close = document.createElement("button");
 
+    if(!pop_up || !pop_up_results || !loading || !searching_load_screen) {
+        return;
+    }
+
     pop_up.style.display = "flex";
     loading.style.display = "none";
 
@@ -622,6 +640,10 @@ function open_filter() {
     const filter = document.querySelector(".filter");
     const pop_up = document.querySelector(".pop_up");
     const pop_up_results = document.querySelector(".pop_up_results");
+
+    if(!filter || !pop_up || !pop_up_results) {
+        return;
+    }
     
     filter.addEventListener("click", function() {
         const faculty_label = document.createElement("label");
@@ -703,6 +725,10 @@ function open_exclude() {
     const exclude = document.querySelector(".exclude");
     const pop_up = document.querySelector(".pop_up");
     const pop_up_results = document.querySelector(".pop_up_results");
+
+    if(!exclude || !pop_up || !pop_up_results) {
+        return;
+    }
     
     exclude.addEventListener("click", function() {
         const close_exclude = document.createElement("button");
