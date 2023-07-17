@@ -246,7 +246,31 @@ function schedule_click() {
 }
 
 async function get_info(course_code) {
-    const res = await fetch(baseUrl + "course?key=" + course_code, {
+    let url = baseUrl + "course?key=" + course_code;
+
+    if(!localStorage.getItem("faculty")) {
+        url += "&faculty=" + faculty_list_map.get(faculty_list[0]);
+    }
+    else {
+        const arr = JSON.parse(localStorage.getItem("faculty"));
+
+        for(let i = 0; i < arr.length; ++i) {
+            url += "&faculty=" + faculty_list_map.get(arr[i]);
+        }
+    }
+
+    if(!localStorage.getItem("session")) {
+        url += "&session=" + session_list_map.get(session_list[0]);
+    }
+    else {
+        const arr = JSON.parse(localStorage.getItem("session"));
+
+        for(let i = 0; i < arr.length; ++i) {
+            url += "&session=" + session_list_map.get(arr[i]);
+        }
+    }
+
+    const res = await fetch(url, {
       method: "GET"
     });
 
@@ -293,7 +317,7 @@ function find_course(course_code) {
             const index = result.search("not found");
 
             loading.style.display = "flex";
-            searching_load_screen.innerHTML = result.substring(0, index) + " not found!";
+            searching_load_screen.innerHTML = result.substring(0, index) + " not found";
         }
         // multiple results found
         else if(JSON.parse(result)[0].course_name) {
@@ -647,11 +671,23 @@ const faculty_list = [
     "Faculty of Music",
     "John H. Daniels Faculty of Architecture, Landscape, & Design"
 ];
+const faculty_list_map = new Map([
+    [faculty_list[0], "APSC"],
+    [faculty_list[1], "ARTSC"],
+    [faculty_list[2], "FPEH"],
+    [faculty_list[3], "MUSIC"],
+    [faculty_list[4], "ARCLA"]
+]);
 const session_list = [
     "Fall 2023 (F)",
     "Winter 2024 (S)",
     "Fall-Winter 2023-2024 (Y)"
 ];
+const session_list_map = new Map([
+    [session_list[0], "20239"],
+    [session_list[1], "20241"],
+    [session_list[2], "20239-20241"]
+]);
 
 const baseUrl = "http://localhost:3000/";
 

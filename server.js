@@ -6,9 +6,18 @@ app.use(express.static("public"));
 app.use(express.json());
 
 app.get("/:dynamic", (req, res) => {
-    const {key} = req.query;
+    let {key} = req.query;
+    let {faculty} = req.query;
+    let {session} = req.query;
 
-    const course_promise = get_matches(key);
+    if(!Array.isArray(faculty)) {
+        faculty = new Array(faculty);
+    }
+    if(!Array.isArray(session)) {
+        session = new Array(session);
+    }
+
+    const course_promise = get_matches(key, faculty, session);
     
     course_promise.then(result => {
         if(result.length == 0) {
@@ -19,7 +28,7 @@ app.get("/:dynamic", (req, res) => {
             let course_name = result[0].course_name;
             let course_section = result[0].course_section;
             
-            const course_info = get_course_info(course_code, course_name, course_section);
+            const course_info = get_course_info(course_code, course_name, course_section, faculty, session);
 
             course_info.then(data => {
                 res.status(200).json(data);
@@ -32,10 +41,20 @@ app.get("/:dynamic", (req, res) => {
 
 });
 
-async function get_matches(course) {
+async function get_matches(course, faculty, session) {
     let course_list;
 
-    const url = "https://api.easi.utoronto.ca/ttb/getOptimizedMatchingCourseTitles?term=" + course + "&divisions=APSC&divisions=ARTSC&sessions=20239&sessions=20241&sessions=20239-20241&lowerThreshold=50&upperThreshold=200";
+    let url = "https://api.easi.utoronto.ca/ttb/getOptimizedMatchingCourseTitles?term=" + course;
+
+    for(let i = 0; i < faculty.length; ++i) {
+        url += "&divisions=" + faculty[i];
+    }
+
+    for(let i = 0; i < session.length; ++i) {
+        url += "&sessions=" + session[i];
+    }
+
+    url += "&lowerThreshold=50&upperThreshold=200";
 
     await fetch(url)
     .then(response => response.text())
@@ -49,7 +68,7 @@ async function get_matches(course) {
     return course_list;
 }
 
-async function get_course_info(course_code, course_name, course_section) {
+async function get_course_info(course_code, course_name, course_section, faculty, session) {
     let course_info;
 
     await fetch("https://api.easi.utoronto.ca/ttb/getPageableCourses", {
@@ -66,14 +85,14 @@ async function get_course_info(course_code, course_name, course_section) {
             },
             "departmentProps": [],
             "campuses": [],
-            "sessions": ["20239", "20241", "20239-20241"],
+            "sessions": session,
             "requirementProps": [],
             "instructor": "",
             "courseLevels": [],
             "deliveryModes": [],
             "dayPreferences": [],
             "timePreferences": [],
-            "divisions": ["APSC", "ARTSC"],
+            "divisions": faculty,
             "creditWeights": [],
             "page": 1,
             "pageSize": 20,
