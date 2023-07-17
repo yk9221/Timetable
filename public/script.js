@@ -69,7 +69,6 @@ function parse_json() {
             }
 
             let remove = false;
-            console.log(exclude)
             for(let k = 0; k < exclude.length; ++k) {
                 if(exclude[k].course_code == code &&
                     exclude[k].teach_method == type &&
@@ -99,10 +98,11 @@ function create_schedule() {
     if(!next_button || all_courses.length == 0) {
         return;
     }
-
     
     // calculate the number of total permutations
     total_permutations = permutations(counter);
+
+    console.log(all_courses)
     
     // loop through all permutations
     for(let i = 0; i < total_permutations; ++i) {
@@ -115,8 +115,8 @@ function create_schedule() {
         }
 
         // loop through all the selected courses
-        for(let j = 0; j < all_courses.length; ++j) {
-            for(let k = 0; k < all_courses[j].length; ++k) {
+        for(let j = 0; j < all_courses.length && !conflict; ++j) {
+            for(let k = 0; k < all_courses[j].length && !conflict; ++k) {
     
                 // if the course type (lec, tut, pra) is not undefined
                 if(all_courses[j][k][counter[j * 3 + k].count] != undefined) {
@@ -124,14 +124,14 @@ function create_schedule() {
                     const time = course.section.section_times;
     
                     // loop through the times for the current course
-                    for(let l = 0; l < time.length; ++l) {
-                        for(let m = 0; m < time[l].duration; ++m) {
+                    for(let l = 0; l < time.length && !conflict; ++l) {
+                        for(let m = 0; m < time[l].duration && !conflict; ++m) {
 
                             // if the time slot is empty then add it to the schedule
                             if(!temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m]) {
                                 temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m] = course;
                             }
-                            // otherwise raise the conflic flag
+                            // otherwise raise the conflict flag
                             else {
                                 conflict = true;
                             }
@@ -181,6 +181,7 @@ function print_schedule(schedule) {
     const save_button = document.querySelector(".save_button");
 
     if(!table || !save_button || !schedule) {
+        console.log(schedule);
         return;
     }
 
@@ -579,6 +580,33 @@ function find_filter_in_storage(type, element) {
     return false;
 }
 
+function add_exclude_to_storage(type, element) {
+    add_filter_to_storage(type, element);
+}
+
+function remove_exclude_to_storage(type, element) {
+    if(!localStorage.getItem(type)) {
+        return;
+    }
+
+    const arr = JSON.parse(localStorage.getItem(type));
+    let index = -1;
+
+    for(let i = 0; i < arr.length; ++i) {
+        if(arr[i].course_code == element.course_code &&
+            arr[i].section_number == element.section_number &&
+            arr[i].teach_method == element.teach_method) {
+            index = i;
+        }
+    }
+
+    if(index != -1) {
+        arr.splice(index, 1);
+    }
+
+    localStorage.setItem(type, JSON.stringify(arr));
+}
+
 function find_exclude_in_storage(type, element) {
     if(!localStorage.getItem(type)) {
         return false;
@@ -732,7 +760,10 @@ function open_exclude() {
     
     exclude.addEventListener("click", function() {
         const close_exclude = document.createElement("button");
-        const course_data = sort_course_data(JSON.parse(localStorage.course_data));
+        let course_data = new Array();
+        if(localStorage.course_data) {
+            course_data = sort_course_data(JSON.parse(localStorage.course_data));
+        }
 
         pop_up.style.display = "flex";
         pop_up_results.style.display = "grid";
@@ -760,10 +791,10 @@ function open_exclude() {
                 pop_up_results.appendChild(check_box_label);
                 check_box.addEventListener("change", function() {
                     if(!check_box.checked) {
-                        add_filter_to_storage("exclude", course_data[i][j]);
+                        add_exclude_to_storage("exclude", course_data[i][j]);
                     }
                     else {
-                        remove_filter_from_storage("exclude", course_data[i][j]);
+                        remove_exclude_to_storage("exclude", course_data[i][j]);
                     }
                 });
             }
@@ -782,6 +813,19 @@ function open_exclude() {
     exclude.addEventListener("mouseout", function() {
         exclude.style.color = "black";
     });
+}
+
+function main() {
+    parse_json();
+    create_permutations();
+    create_schedule();
+
+    clear_local_storage();
+    course_search();
+    add_previous_elements();
+    schedule_click();
+    open_filter();
+    open_exclude();
 }
 
 const course_code_map = new Map();
@@ -841,13 +885,4 @@ const all_courses = new Array();
 const counter = new Array();
 const schedule = new Array();
 
-parse_json();
-create_permutations();
-create_schedule();
-
-clear_local_storage();
-course_search();
-add_previous_elements();
-schedule_click();
-open_filter();
-open_exclude();
+main();
