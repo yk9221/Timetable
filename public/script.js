@@ -561,6 +561,63 @@ function find_filter_in_storage(type, element) {
     return false;
 }
 
+function find_exclude_in_storage(type, element) {
+    if(!localStorage.getItem(type)) {
+        return false;
+    }
+
+    const arr = JSON.parse(localStorage.getItem(type));
+
+    for(let i = 0; i < arr.length; ++i) {
+        if(arr[i].course_code == element.course_code &&
+            arr[i].section_number == element.section_number &&
+            arr[i].teach_method == element.teach_method) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function sort_course_data(data) {
+    const sorted_data = new Array();
+    for(let i = 0; i < data.length; ++i) {
+        const lec = new Array();
+        const tut = new Array();
+        const pra = new Array();
+        for(let j = 0; j < data[i].length; ++j) {
+            if(data[i][j].teach_method == "LEC") {
+                lec.push({
+                    course_code: data[i][j].course_code,
+                    teach_method: data[i][j].teach_method,
+                    section_number: data[i][j].section_number
+                });
+            }
+            else if(data[i][j].teach_method == "TUT") {
+                tut.push({
+                    course_code: data[i][j].course_code,
+                    teach_method: data[i][j].teach_method,
+                    section_number: data[i][j].section_number
+                });
+            }
+            else if(data[i][j].teach_method == "PRA") {
+                pra.push({
+                    course_code: data[i][j].course_code,
+                    teach_method: data[i][j].teach_method,
+                    section_number: data[i][j].section_number
+                });
+            }
+        }
+        lec.sort((course1, course2) => course1.section_number - course2.section_number);
+        tut.sort((course1, course2) => course1.section_number - course2.section_number);
+        pra.sort((course1, course2) => course1.section_number - course2.section_number);
+        
+        sorted_data[i] = lec.concat(tut, pra);
+    }
+
+    return sorted_data;
+}
+
 function open_filter() {
     const filter = document.querySelector(".filter");
     const pop_up = document.querySelector(".pop_up");
@@ -642,6 +699,65 @@ function open_filter() {
     });
 }
 
+function open_exclude() {
+    const exclude = document.querySelector(".exclude");
+    const pop_up = document.querySelector(".pop_up");
+    const pop_up_results = document.querySelector(".pop_up_results");
+    
+    exclude.addEventListener("click", function() {
+        const close_exclude = document.createElement("button");
+        const course_data = sort_course_data(JSON.parse(localStorage.course_data));
+
+        pop_up.style.display = "flex";
+        pop_up_results.style.display = "grid";
+
+        close_exclude.appendChild(document.createTextNode("X"));
+        pop_up_results.appendChild(close_exclude);
+
+        for(let i = 0; i < course_data.length; ++i) {
+            for(let j = 0; j < course_data[i].length; ++j) {
+                if(j == 0) {
+                    const course_label = document.createElement("label");
+                    course_label.style.fontWeight = "bold";
+                    course_label.style.marginBottom = "3%";
+                    course_label.appendChild(document.createTextNode(course_data[i][j].course_code));
+                    pop_up_results.appendChild(course_label);
+                }
+                const check_box = document.createElement("input");
+                const check_box_label = document.createElement("label");
+                check_box.type = "checkbox";
+                check_box.checked = !find_exclude_in_storage("exclude", course_data[i][j]);
+                check_box_label.style.marginBottom = "3%";
+                check_box_label.appendChild(check_box);
+                check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number));
+
+                pop_up_results.appendChild(check_box_label);
+                check_box.addEventListener("change", function() {
+                    if(!check_box.checked) {
+                        add_filter_to_storage("exclude", course_data[i][j]);
+                    }
+                    else {
+                        remove_filter_from_storage("exclude", course_data[i][j]);
+                    }
+                });
+            }
+        }
+
+        close_exclude.addEventListener("click", function() {
+            pop_up.style.display = "none";
+            pop_up_results.innerHTML = "";
+        });
+    });
+
+    exclude.addEventListener("mouseover", function() {
+        exclude.style.color = "blue";
+    });
+
+    exclude.addEventListener("mouseout", function() {
+        exclude.style.color = "black";
+    });
+}
+
 const course_code_map = new Map();
 const course_section_map = new Map([
     ["LEC", 0],
@@ -708,3 +824,4 @@ course_search();
 add_previous_elements();
 schedule_click();
 open_filter();
+open_exclude();

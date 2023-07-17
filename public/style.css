@@ -192,3 +192,7 @@ th, td {
 .filter {
     cursor: pointer;
 }
+
+.exclude {
+    cursor: pointer;
+}
