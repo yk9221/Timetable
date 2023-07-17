@@ -101,8 +101,6 @@ function create_schedule() {
     
     // calculate the number of total permutations
     total_permutations = permutations(counter);
-
-    console.log(all_courses)
     
     // loop through all permutations
     for(let i = 0; i < total_permutations; ++i) {
@@ -181,7 +179,6 @@ function print_schedule(schedule) {
     const save_button = document.querySelector(".save_button");
 
     if(!table || !save_button || !schedule) {
-        console.log(schedule);
         return;
     }
 
