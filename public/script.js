@@ -221,8 +221,6 @@ function next_schedule(caption) {
         possibility_count++;
     }
 
-    console.log(possibility_count % (schedule.length + 1) - 1)
-    console.log(schedule[possibility_count % (schedule.length + 1) - 1])
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
@@ -236,9 +234,7 @@ function previous_schedule(caption) {
         possibility_count += schedule.length + 1;
     }
 
-    console.log(possibility_count % (schedule.length + 1) - 1)
-    console.log(schedule[possibility_count % (schedule.length + 1) - 1])
-    print_schedule(schedule[possibility_count % schedule.length - 1]);
+    print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
 
