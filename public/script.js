@@ -214,6 +214,10 @@ function print_on_table(schedule) {
 }
 
 function next_schedule(caption) {
+    if(!caption) {
+        return;
+    }
+
     possibility_count++;
     if(possibility_count % (schedule.length + 1) == 0) {
         possibility_count++;
@@ -225,6 +229,10 @@ function next_schedule(caption) {
 }
 
 function previous_schedule(caption) {
+    if(!caption) {
+        return;
+    }
+
     possibility_count--;
     if(possibility_count % (schedule.length + 1) == 0) {
         possibility_count--;
@@ -331,6 +339,11 @@ async function get_info_selected(result) {
 function add_course(result, course_code, course_term) {
     const courses = JSON.parse(localStorage.getItem("courses"));
     const searching_load_screen = document.querySelector(".searching_load_screen");
+
+    if(courses && courses.length > 5) {
+        searching_load_screen.innerHTML = "Max is 6 courses";
+        return;
+    }
 
     if(!localStorage.getItem("course_term")) {
         if(course_term == "Y") {
@@ -553,13 +566,21 @@ function clear_local_storage() {
     const clear_storage = document.querySelector(".clear_storage");
     const course_list = document.querySelector(".course_list");
 
-    if(!clear_storage) {
+    if(!clear_storage || !course_list) {
         return;
     }
 
     clear_storage.addEventListener("click", function() {
         localStorage.clear();
         course_list.innerHTML = "";
+        localStorage.setItem("faculty", JSON.stringify(new Array(
+            faculty_list[0],
+            faculty_list[1]
+        )));
+        localStorage.setItem("session", JSON.stringify(new Array(
+            session_list[0],
+            session_list[2]
+        )));
     });
 }
 
@@ -826,6 +847,13 @@ function open_filter() {
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
         });
+
+        window.addEventListener("keydown", function(event) {
+            if(event.key == "Escape") {
+                pop_up.style.display = "none";
+                pop_up_results.innerHTML = "";
+            }
+        });
     });
 
     filter.addEventListener("mouseover", function() {
@@ -895,6 +923,13 @@ function open_exclude() {
         close_exclude.addEventListener("click", function() {
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
+        });
+        
+        window.addEventListener("keydown", function(event) {
+            if(event.key == "Escape") {
+                pop_up.style.display = "none";
+                pop_up_results.innerHTML = "";
+            }
         });
     });
 

@@ -5,6 +5,7 @@ table {
     border-style: none;
     text-align: center;
     display: block;
+    width: 100%;
 }
 
 thead {
@@ -14,6 +15,16 @@ thead {
 th, td {
     border: 1px solid black;
     padding: 10px;
+    width: 100px;
+    height: 37px;
+}
+
+.table_div {
+    margin-left: 20%;
+}
+
+.table_control {
+    margin-left: 20%;
 }
 
 .course_search {
@@ -25,6 +36,7 @@ th, td {
     border-radius: 60px;
     padding-left: 2%;
     height: 5%;
+    display: block;
 }
 
 .search_text {
@@ -111,6 +123,8 @@ th, td {
     cursor: pointer;
     display: block;
     margin: 5px;
+    border-radius: 10px;
+    padding-left: 5%;
 }
 
 .course_list li span {
@@ -159,7 +173,7 @@ th, td {
     cursor: pointer;
     font-size: 60px;
     margin-left: 32%;
-    margin-top: -10%;
+    margin-top: -12%;
     position: absolute;
     color: grey;
 }
@@ -189,10 +203,10 @@ th, td {
     color: red;
 }
 
-.filter {
+.filter, .exclude {
     cursor: pointer;
-}
-
-.exclude {
-    cursor: pointer;
+    position: relative;
+    top: 40%;
+    left: 10%;
+    margin-left: 15%;
 }
