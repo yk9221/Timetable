@@ -268,12 +268,29 @@ function schedule_click() {
 }
 
 function generate_tables(table_in_table) {
+    let not_enough = false;
+
     const outer_table = document.createElement("table");
     for(let i = 0; i < table_height; ++i) {
+        if(not_enough) {
+            break;
+        }
+
         const outer_tr = document.createElement("tr");
-        for(let j = 0; j < table_height; ++j) {
+        for(let j = 0; j < table_width; ++j) {
+            if(schedule.length <= i * table_width + j) {
+                not_enough = true;
+                break;
+            }
+
             const outer_td = document.createElement("td");
             const inner_table = document.createElement("table");
+
+            const caption = document.createElement("caption");
+            caption.appendChild(document.createTextNode("Timetable " + (i * table_width + j + 1)));
+            caption.style.fontWeight = "bold";
+            inner_table.appendChild(caption);
+
             for(let k = 0; k < max_hours_per_day; ++k) {
                 const inner_tr = document.createElement("tr");
                 for(let l = 0; l < days_of_week.size; ++l) {
@@ -283,10 +300,14 @@ function generate_tables(table_in_table) {
                 inner_table.appendChild(inner_tr);
             }
 
+            inner_table.addEventListener("click", function() {
+                console.log(i * table_width + j);
+            })
+
             for(let k = 0; k < max_hours_per_day; ++k) {
                 for(let l = 0; l < days_of_week.size; ++l) {
-                    if(schedule[i * table_height + j][l][k]) {
-                        inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[i * table_height + j][l][k].course_code));
+                    if(schedule[i * table_width + j][l][k]) {
+                        inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[i * table_width + j][l][k].course_code));
                     }
                     else {
                         inner_table.rows[k].cells[l].style.backgroundColor = "white";
@@ -310,8 +331,6 @@ function multiple_schedules() {
     }
 
     generate_tables(table_in_table);
-
-
 }
 
 async function get_info(course_code) {
@@ -1057,6 +1076,7 @@ let course_count = 0;
 let possibility_count = 0;
 let total_permutations = 0;
 const table_height = 4;
+const table_width = 7;
 const max_hours_per_day = 12;
 const all_courses = new Array();
 const counter = new Array();

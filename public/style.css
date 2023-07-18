@@ -211,6 +211,10 @@
     margin-left: 15%;
 }
 
+.table_in_table {
+    margin-left: 12%;
+}
+
 .table_in_table table {
     border: 2px solid black;
     border-collapse: collapse;
@@ -219,4 +223,8 @@
 .table_in_table table tr td {
     border: 1px solid black;
     padding: 10px;
+}
+
+.table_in_table table tr td table {
+    cursor: pointer;
 }
