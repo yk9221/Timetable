@@ -43,11 +43,10 @@ class LimitNode {
 };
 
 function parse_json() {
-    const next_button = document.querySelector(".next_course");
     const arr = JSON.parse(localStorage.getItem("course_data"));
     const exclude = JSON.parse(localStorage.getItem("exclude"));
     
-    if(!next_button || !arr) {
+    if(!arr) {
         return;
     }
 
@@ -96,8 +95,10 @@ function create_permutations() {
 
 function create_schedule() {
     const next_button = document.querySelector(".next_course");
+    const prev_button = document.querySelector(".previous_course");
+    const table_in_table = document.querySelector(".table_in_table");
 
-    if(!next_button || all_courses.length == 0) {
+    if((!next_button || !prev_button || all_courses.length == 0) && !table_in_table) {
         return;
     }
     
@@ -264,6 +265,53 @@ function schedule_click() {
     prev_button.addEventListener("click", function() {
         previous_schedule(caption);
     });
+}
+
+function generate_tables(table_in_table) {
+    const outer_table = document.createElement("table");
+    for(let i = 0; i < table_height; ++i) {
+        const outer_tr = document.createElement("tr");
+        for(let j = 0; j < table_height; ++j) {
+            const outer_td = document.createElement("td");
+            const inner_table = document.createElement("table");
+            for(let k = 0; k < max_hours_per_day; ++k) {
+                const inner_tr = document.createElement("tr");
+                for(let l = 0; l < days_of_week.size; ++l) {
+                    const inner_td = document.createElement("td");
+                    inner_tr.appendChild(inner_td);
+                }
+                inner_table.appendChild(inner_tr);
+            }
+
+            for(let k = 0; k < max_hours_per_day; ++k) {
+                for(let l = 0; l < days_of_week.size; ++l) {
+                    if(schedule[i * table_height + j][l][k]) {
+                        inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[i * table_height + j][l][k].course_code));
+                    }
+                    else {
+                        inner_table.rows[k].cells[l].style.backgroundColor = "white";
+                    }
+                }
+            }
+
+            outer_td.appendChild(inner_table);
+            outer_tr.appendChild(outer_td);
+        }
+        outer_table.appendChild(outer_tr);
+    }
+    table_in_table.appendChild(outer_table);
+}
+
+function multiple_schedules() {
+    const table_in_table = document.querySelector(".table_in_table");
+    
+    if(!table_in_table) {
+        return;
+    }
+
+    generate_tables(table_in_table);
+
+
 }
 
 async function get_info(course_code) {
@@ -483,7 +531,7 @@ function remove_element(remove, item, course_list) {
         course_list.removeChild(item);
 
         for(let i = 0; i < courses.length; ++i) {
-            if(courses[i] == item.innerHTML) {
+            if(courses[i] == item.innerHTML.substring(0, item.innerHTML.indexOf(" "))) {
                 courses.splice(i, 1);
                 course_data.splice(i, 1);
             }
@@ -947,6 +995,8 @@ function main() {
     create_permutations();
     create_schedule();
 
+    multiple_schedules();
+
     clear_local_storage();
     course_search();
     add_previous_elements();
@@ -969,13 +1019,12 @@ const days_of_week = new Map([
     ["Friday", 4]
 ]);
 const colors = new Map([
-    [0, "purple"],
-    [1, "green"],
-    [2, "orange"],
-    [3, "pink"],
-    [4, "yellow"],
-    [5, "blue"],
-    [6, "red"]
+    [0, "rgb(110, 77, 188)"], // purple
+    [1, "rgb(29, 153, 111)"], // green
+    [2, "rgb(209,84,61)"], // orange
+    [3, "rgb(201,73,115)"], // pink
+    [4, "rgb(212,138,52)"], // yellow
+    [5, "rgb(173, 216, 250)"], // blue
 ]);
 const faculty_list = [
     "Faculty of Applied Science & Engineering",
@@ -1007,6 +1056,7 @@ const baseUrl = "http://localhost:3000/";
 let course_count = 0;
 let possibility_count = 0;
 let total_permutations = 0;
+const table_height = 4;
 const max_hours_per_day = 12;
 const all_courses = new Array();
 const counter = new Array();
