@@ -330,6 +330,30 @@ function generate_tables(table_in_table) {
     table_in_table.appendChild(outer_table);
 }
 
+function create_course_legend() {
+    const courses = JSON.parse(localStorage.getItem("courses"));
+    const course_view = document.querySelector(".course_view");
+    const color_list = document.createElement("ul");
+
+    for(let i = 0; i < courses.length; ++i) {
+        const space_label = document.createElement("label");
+        const color_item = document.createElement("li");
+
+        space_label.style.backgroundColor = colors.get(course_code_map.get(courses[i]));
+        space_label.style.color = colors.get(course_code_map.get(courses[i]));
+        space_label.style.paddingRight = "24%";
+        space_label.style.marginRight = "10%";
+
+        color_item.appendChild(space_label);
+
+        color_item.appendChild(document.createTextNode(courses[i]));
+        color_item.style.fontWeight = "bold";
+        color_list.appendChild(color_item);
+    }
+
+    course_view.appendChild(color_list);
+}
+
 function multiple_schedules() {
     const table_in_table = document.querySelector(".table_in_table");
     const overview_prev = document.querySelector(".overview_prev");
@@ -363,6 +387,7 @@ function multiple_schedules() {
         }
     });
 
+    create_course_legend();
     generate_tables(table_in_table);
 }
 

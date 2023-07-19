@@ -221,7 +221,7 @@
 }
 
 .table_in_table {
-    margin-left: 12%;
+    margin-left: 18%;
 }
 
 .table_in_table table {
@@ -236,4 +236,13 @@
 
 .table_in_table table tr td table {
     cursor: pointer;
+}
+
+.course_view {
+    float: left;
+}
+
+.course_view li {
+    display: block;
+    margin-bottom: 10%;
 }
