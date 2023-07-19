@@ -202,16 +202,10 @@ function print_schedule(schedule) {
         localStorage.setItem("saved", JSON.stringify(schedule));
     });
 
-    print_on_table(schedule);
+    print_on_table(schedule, table);
 }
 
-function print_on_table(schedule) {
-    const table = document.querySelector(".table");
-
-    if(!table) {
-        return;
-    }
-
+function print_on_table(schedule, table) {
     for(let i = 0; i < schedule.length; ++i) {
         for(let j = 0; j < schedule[i].length; ++j) {
             if(schedule[i][j]) {
@@ -279,6 +273,33 @@ function schedule_click() {
     });
 }
 
+function print_zoomed_schedule(number) {
+    const schedule_zoom = document.querySelector(".schedule_zoom");
+    const clicked_schedule = document.querySelector(".clicked_schedule");
+    const overview_table = document.querySelector(".overview_table");
+    const overview_table_caption = document.querySelector(".overview_table_caption");
+    const close_table = document.querySelector(".close_table");
+
+    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table) {
+        return;
+    }
+
+    schedule_zoom.style.display = "flex";
+
+    print_on_table(schedule[number], overview_table);
+    overview_table_caption.innerHTML = "Timetable " + (number + 1);
+    overview_table_caption.style.fontWeight = "bold";
+
+    close_table.addEventListener("click", function() {
+        schedule_zoom.style.display = "none";
+    });
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "Escape") {
+            schedule_zoom.style.display = "none";
+        }
+    });
+}
+
 function generate_tables(table_in_table) {
     create_schedule();
 
@@ -316,7 +337,7 @@ function generate_tables(table_in_table) {
             }
 
             inner_table.addEventListener("click", function() {
-                console.log(overview_start + i * table_width + j);
+                print_zoomed_schedule(overview_start + i * table_width + j);
             });
 
             for(let k = 0; k < max_hours_per_day; ++k) {
@@ -1214,7 +1235,7 @@ let course_count = 0;
 let possibility_count = 0;
 let total_permutations = 0;
 let overview_start = 0;
-const table_height = 4;
+const table_height = 2;
 const table_width = 7;
 const max_hours_per_day = 12;
 const all_courses = new Array();
