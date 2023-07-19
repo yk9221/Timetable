@@ -560,6 +560,65 @@ function remove_element(remove, item, course_list) {
     });
 }
 
+function press_course_list(item) {
+    const course_data = sort_course_data(JSON.parse(localStorage.course_data));
+    const pop_up = document.querySelector(".pop_up");
+    const pop_up_results = document.querySelector(".pop_up_results");
+    const course_label = document.createElement("label");
+    const description_label = document.createElement("label");
+    const close = document.createElement("button");
+    const course_code = item.innerHTML.substring(0, item.innerHTML.indexOf(" "));
+    let course_description = "";
+    let index = -1;
+
+
+    if(!pop_up || !pop_up_results) {
+        return;
+    }
+
+    for(let i = 0; i < course_data.length; ++i) {
+        if(course_code == course_data[i][0].course_code) {
+            course_description = course_data[i][0].course_description;
+            index = i;
+        }
+    }
+
+    pop_up.style.display = "flex";
+
+    course_label.appendChild(document.createTextNode(item.innerHTML.substring(0, item.innerHTML.indexOf("<"))));
+    pop_up_results.appendChild(course_label);
+
+    description_label.appendChild(document.createTextNode("Course Description: " + course_description[0].toUpperCase() + course_description.slice(1)));
+    pop_up_results.appendChild(description_label);
+
+    close.appendChild(document.createTextNode("X"));
+    pop_up_results.appendChild(close);
+
+    for(let i = 0; i < course_data[index].length; ++i) {
+        const section = document.createElement("label");
+        section.appendChild(document.createTextNode(course_data[index][i].teach_method + course_data[index][i].section_number));
+        pop_up_results.appendChild(section);
+        
+        for(let j = 0; j < course_data[index][i].time.length; ++j) {
+            const time = document.createElement("label");
+            time.appendChild(document.createTextNode(course_data[index][i].time[j].day + " " + course_data[index][i].time[j].start_time + " - " + course_data[index][i].time[j].end_time));
+            pop_up_results.appendChild(time);
+        }
+    }
+
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "Escape") {
+            pop_up.style.display = "none";
+            pop_up_results.innerHTML = "";
+        }
+    });
+
+    close.addEventListener("click", function() {
+        pop_up.style.display = "none";
+        pop_up_results.innerHTML = "";
+    });
+}
+
 function add_new_element(course_name, course_term) {
     const course_list = document.querySelector(".course_list");
     const item = document.createElement("li");
@@ -571,6 +630,10 @@ function add_new_element(course_name, course_term) {
     item.appendChild(document.createTextNode(course_name + " " + course_term));
     item.appendChild(remove);
     course_list.appendChild(item);
+
+    item.addEventListener("click", function(){
+        press_course_list(item);
+    });
 }
 
 function add_previous_elements() {
@@ -606,6 +669,10 @@ function add_previous_elements() {
             item.appendChild(document.createTextNode(courses[i] + " " + course_term));
             item.appendChild(remove);
             course_list.appendChild(item);
+
+            item.addEventListener("click", function(){
+                press_course_list(item);
+            });
         }
     }
 }
@@ -672,6 +739,13 @@ function multiple_searches(results, search) {
 
     close.appendChild(document.createTextNode("X"));
     pop_up_results.appendChild(close);
+
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "Escape") {
+            pop_up.style.display = "none";
+            pop_up_results.innerHTML = "";
+        }
+    });
 
     close.addEventListener("click", function() {
         pop_up.style.display = "none";
@@ -808,22 +882,31 @@ function sort_course_data(data) {
             if(data[i][j].teach_method == "LEC") {
                 lec.push({
                     course_code: data[i][j].course_code,
+                    course_description: data[i][j].course_description,
+                    course_term: data[i][j].course_term,
                     teach_method: data[i][j].teach_method,
-                    section_number: data[i][j].section_number
+                    section_number: data[i][j].section_number,
+                    time: data[i][j].time
                 });
             }
             else if(data[i][j].teach_method == "TUT") {
                 tut.push({
                     course_code: data[i][j].course_code,
+                    course_description: data[i][j].course_description,
+                    course_term: data[i][j].course_term,
                     teach_method: data[i][j].teach_method,
-                    section_number: data[i][j].section_number
+                    section_number: data[i][j].section_number,
+                    time: data[i][j].time
                 });
             }
             else if(data[i][j].teach_method == "PRA") {
                 pra.push({
                     course_code: data[i][j].course_code,
+                    course_description: data[i][j].course_description,
+                    course_term: data[i][j].course_term,
                     teach_method: data[i][j].teach_method,
-                    section_number: data[i][j].section_number
+                    section_number: data[i][j].section_number,
+                    time: data[i][j].time
                 });
             }
         }

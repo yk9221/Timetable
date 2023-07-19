@@ -27,8 +27,9 @@ app.get("/:dynamic", (req, res) => {
             let course_code = result[0].course_code;
             let course_name = result[0].course_name;
             let course_term = result[0].course_term;
+            let course_description = result[0].course_description;
             
-            const course_info = get_course_info(course_code, course_name, course_term, faculty, session);
+            const course_info = get_course_info(course_code, course_name, course_term, course_description, faculty, session);
 
             course_info.then(data => {
                 res.status(200).json(data);
@@ -68,7 +69,7 @@ async function get_matches(course, faculty, session) {
     return course_list;
 }
 
-async function get_course_info(course_code, course_name, course_term, faculty, session) {
+async function get_course_info(course_code, course_name, course_term, course_description, faculty, session) {
     let course_info;
 
     await fetch("https://api.easi.utoronto.ca/ttb/getPageableCourses", {
@@ -108,7 +109,7 @@ async function get_course_info(course_code, course_name, course_term, faculty, s
         }
     })
     .then(data => {
-        course_info = parse_course_info(course_code, data, course_term);
+        course_info = parse_course_info(course_code, data, course_term, course_description);
     })
     .catch(error => {
         console.log("Error: ", error);
@@ -124,20 +125,31 @@ function parse_matches(data) {
     const code_elements = full_html("code");
     const name_elements = full_html("name");
     const section_elements = full_html("sectionCode");
+    const description_elements = full_html("description");
 
     const course_list = new Array();
 
-    const max_length = Math.max(code_elements.length, name_elements.length, section_elements.length);
+    const max_length = Math.max(code_elements.length, name_elements.length, section_elements.length, description_elements.length);
 
     for(let i = 0; i < max_length; ++i) {
+        if(i < description_elements.length) {
+            const description_element = full_html(description_elements[i]);
+            const description_parent = description_element.parent();
+
+            if(description_parent.get(0).tagName == "codesandtitles") {
+                course_list[i] = {
+                    course_description: description_element.text()
+                };
+            }
+        }
+
         if(i < section_elements.length) {
             const section_element = full_html(section_elements[i]);
             const section_parent = section_element.parent();
 
             if(section_parent.get(0).tagName == "codesandtitles") {
-                course_list[i] = {
-                    course_term: section_element.text()
-                };
+                course_list[i] = Object.assign({course_term: section_element.text()}, course_list[i]);
+                
             }
         }
 
@@ -163,7 +175,7 @@ function parse_matches(data) {
     return course_list;
 }
 
-function parse_course_info(course_code, data, course_term) {
+function parse_course_info(course_code, data, course_term, course_description) {
     const cheerio = require("cheerio");
 
     const weekday_map = new Map([
@@ -194,7 +206,8 @@ function parse_course_info(course_code, data, course_term) {
                 course_code: course_code,
                 course_term: course_term,
                 teach_method: teach_method.text(),
-                section_number: section_number.text()
+                section_number: section_number.text(),
+                course_description: course_description
             };
             course_info[i - 1]["time"] = new Array();
 
@@ -241,11 +254,12 @@ app.post("/", (req, res) => {
     const course_code = course.course_code;
     const course_name = course.course_name;
     const course_term = course.course_term;
+    const course_description = course.course_description;
     const faculty = course.faculty;
     const session = course.session;
 
     
-    const course_info = get_course_info(course_code, course_name, course_term, faculty, session);
+    const course_info = get_course_info(course_code, course_name, course_term, course_description, faculty, session);
 
     course_info.then(data => {
         res.status(200).json(data);
