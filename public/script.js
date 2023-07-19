@@ -148,6 +148,10 @@ function create_schedule() {
         }
         // go to the next possible permutation
         add_one(counter);
+
+        if(table_in_table && schedule.length >= overview_start + table_height * table_width) {
+            break;
+        }
     }
 }
 
@@ -268,6 +272,9 @@ function schedule_click() {
 }
 
 function generate_tables(table_in_table) {
+    create_schedule();
+
+    table_in_table.innerHTML = "";
     let not_enough = false;
 
     const outer_table = document.createElement("table");
@@ -278,7 +285,7 @@ function generate_tables(table_in_table) {
 
         const outer_tr = document.createElement("tr");
         for(let j = 0; j < table_width; ++j) {
-            if(schedule.length <= i * table_width + j) {
+            if(schedule.length <= overview_start + i * table_width + j) {
                 not_enough = true;
                 break;
             }
@@ -287,7 +294,7 @@ function generate_tables(table_in_table) {
             const inner_table = document.createElement("table");
 
             const caption = document.createElement("caption");
-            caption.appendChild(document.createTextNode("Timetable " + (i * table_width + j + 1)));
+            caption.appendChild(document.createTextNode("Timetable " + (overview_start + i * table_width + j + 1)));
             caption.style.fontWeight = "bold";
             inner_table.appendChild(caption);
 
@@ -301,13 +308,13 @@ function generate_tables(table_in_table) {
             }
 
             inner_table.addEventListener("click", function() {
-                console.log(i * table_width + j);
-            })
+                console.log(overview_start + i * table_width + j);
+            });
 
             for(let k = 0; k < max_hours_per_day; ++k) {
                 for(let l = 0; l < days_of_week.size; ++l) {
-                    if(schedule[i * table_width + j][l][k]) {
-                        inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[i * table_width + j][l][k].course_code));
+                    if(schedule[overview_start + i * table_width + j][l][k]) {
+                        inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[overview_start + i * table_width + j][l][k].course_code));
                     }
                     else {
                         inner_table.rows[k].cells[l].style.backgroundColor = "white";
@@ -325,10 +332,36 @@ function generate_tables(table_in_table) {
 
 function multiple_schedules() {
     const table_in_table = document.querySelector(".table_in_table");
+    const overview_prev = document.querySelector(".overview_prev");
+    const overview_next = document.querySelector(".overview_next");
     
-    if(!table_in_table) {
+    if(!table_in_table || !overview_prev || !overview_next) {
         return;
     }
+
+    const left_click = function() {
+        if(overview_start >= table_height * table_width) {
+            overview_start -= table_height * table_width;
+            generate_tables(table_in_table);
+        }
+    }
+    const right_click = function() {
+        overview_start += table_height * table_width;
+        generate_tables(table_in_table);
+    }
+
+    overview_prev.addEventListener("click", left_click);
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "ArrowLeft") {
+            left_click();
+        }
+    });
+    overview_next.addEventListener("click", right_click);
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "ArrowRight") {
+            right_click();
+        }
+    });
 
     generate_tables(table_in_table);
 }
@@ -408,27 +441,12 @@ function add_course(result, course_code, course_term) {
     const searching_load_screen = document.querySelector(".searching_load_screen");
 
     if(courses && courses.length > 5) {
-        searching_load_screen.innerHTML = "Max is 6 courses";
+        searching_load_screen.innerHTML = "Cannot take more than 6 courses";
         return;
     }
 
     if(!localStorage.getItem("course_term")) {
-        if(course_term == "Y") {
-            localStorage.setItem("course_term", "F");
-        }
-        else {
-            localStorage.setItem("course_term", course_term);
-        }
-    }
-
-    if(course_term == "Y") {
-        if(!localStorage.getItem("year_course")) {
-            localStorage.setItem("year_course", JSON.stringify(new Array()));
-        }
-        const arr = JSON.parse(localStorage.getItem("year_course"));
-        arr.push(course_code);
-        
-        localStorage.setItem("year_course", JSON.stringify(arr));
+        localStorage.setItem("course_term", course_term);
     }
     
     if(course_term != localStorage.getItem("course_term") && course_term != "Y") {
@@ -472,24 +490,9 @@ function find_course(course_code) {
             const course_term = JSON.parse(result)[0].course_term;
 
             if(!localStorage.getItem("course_term")) {
-                if(course_term == "Y") {
-                    localStorage.setItem("course_term", "F");
-                }
-                else {
-                    localStorage.setItem("course_term", course_term);
-                }
+                localStorage.setItem("course_term", course_term);
             }
 
-            if(course_term == "Y") {
-                if(!localStorage.getItem("year_course")) {
-                    localStorage.setItem("year_course", JSON.stringify(new Array()));
-                }
-                const arr = JSON.parse(localStorage.getItem("year_course"));
-                arr.push(course_code);
-                
-                localStorage.setItem("year_course", JSON.stringify(arr));
-            }
-            
             if(course_term != localStorage.getItem("course_term") && course_term != "Y") {
                 searching_load_screen.innerHTML = "Cannot have both fall and winter term courses";
             }
@@ -586,6 +589,10 @@ function press_course_list(item) {
         }
     }
 
+    if(!course_description) {
+        return;
+    }
+
     pop_up.style.display = "flex";
 
     course_label.appendChild(document.createTextNode(item.innerHTML.substring(0, item.innerHTML.indexOf("<"))));
@@ -594,7 +601,7 @@ function press_course_list(item) {
     course_label_div.appendChild(course_label);
     pop_up_results.appendChild(course_label_div);
 
-    description_label.appendChild(document.createTextNode(course_description[0].toUpperCase() + course_description.slice(1)));
+    description_label.appendChild(document.createTextNode(course_description));
     description_label_div.appendChild(description_label)
     pop_up_results.appendChild(description_label_div);
 
@@ -650,28 +657,25 @@ function add_new_element(course_name, course_term) {
 
 function add_previous_elements() {
     const course_list = document.querySelector(".course_list");
+
     if(!course_list) {
         return;
     }
 
     const courses = JSON.parse(localStorage.getItem("courses"));
+    const course_data = JSON.parse(localStorage.getItem("course_data"));
     const num_of_elements = course_list.childElementCount;
 
     if(courses && num_of_elements != courses.length) {
+        let course_term = "";
         for(let i = 0; i < courses.length; ++i) {
             const course_list = document.querySelector(".course_list");
             const item = document.createElement("li");
             const remove = document.createElement("span");
 
-            const year_course = JSON.parse(localStorage.getItem("year_course"));
-            let course_term = localStorage.getItem("course_term");
-
-            if(year_course) {
-                for(let j = 0; j < year_course.length; ++j) {
-                    if(year_course[j] == courses[i]) {
-                        course_term = "Y";
-                        break;
-                    }
+            for(let j = 0 ; j < course_data.length; ++j) {
+                if(course_data[j][0].course_code == courses[i]) {
+                    course_term = course_data[j][0].course_term;
                 }
             }
 
@@ -1135,8 +1139,8 @@ const days_of_week = new Map([
 const colors = new Map([
     [0, "rgb(110, 77, 188)"], // purple
     [1, "rgb(29, 153, 111)"], // green
-    [2, "rgb(209,84,61)"], // orange
-    [3, "rgb(201,73,115)"], // pink
+    [2, "rgb(209,84,31)"], // orange
+    [3, "rgb(201,73,145)"], // pink
     [4, "rgb(212,138,52)"], // yellow
     [5, "rgb(173, 216, 250)"], // blue
 ]);
@@ -1170,6 +1174,7 @@ const baseUrl = "http://localhost:3000/";
 let course_count = 0;
 let possibility_count = 0;
 let total_permutations = 0;
+let overview_start = 0;
 const table_height = 4;
 const table_width = 7;
 const max_hours_per_day = 12;
