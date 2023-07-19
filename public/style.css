@@ -211,6 +211,15 @@
     margin-left: 15%;
 }
 
+.pop_up_results div {
+    margin-bottom: 2%;
+}
+
+.pop_up_results li {
+    display: block;
+    margin: 5px;
+}
+
 .table_in_table {
     margin-left: 12%;
 }

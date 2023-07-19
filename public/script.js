@@ -564,6 +564,9 @@ function press_course_list(item) {
     const course_data = sort_course_data(JSON.parse(localStorage.course_data));
     const pop_up = document.querySelector(".pop_up");
     const pop_up_results = document.querySelector(".pop_up_results");
+    const course_label_div = document.createElement("div");
+    const description_label_div = document.createElement("div");
+    const time_label_div = document.createElement("div");
     const course_label = document.createElement("label");
     const description_label = document.createElement("label");
     const close = document.createElement("button");
@@ -586,24 +589,33 @@ function press_course_list(item) {
     pop_up.style.display = "flex";
 
     course_label.appendChild(document.createTextNode(item.innerHTML.substring(0, item.innerHTML.indexOf("<"))));
-    pop_up_results.appendChild(course_label);
+    course_label.style.fontWeight = "bold";
+    course_label.style.fontSize = "30px";
+    course_label_div.appendChild(course_label);
+    pop_up_results.appendChild(course_label_div);
 
-    description_label.appendChild(document.createTextNode("Course Description: " + course_description[0].toUpperCase() + course_description.slice(1)));
-    pop_up_results.appendChild(description_label);
+    description_label.appendChild(document.createTextNode(course_description[0].toUpperCase() + course_description.slice(1)));
+    description_label_div.appendChild(description_label)
+    pop_up_results.appendChild(description_label_div);
 
     close.appendChild(document.createTextNode("X"));
     pop_up_results.appendChild(close);
 
     for(let i = 0; i < course_data[index].length; ++i) {
         const section = document.createElement("label");
+        const time_list = document.createElement("ul");
+
         section.appendChild(document.createTextNode(course_data[index][i].teach_method + course_data[index][i].section_number));
-        pop_up_results.appendChild(section);
+        section.style.fontWeight = "bold";
+        time_label_div.appendChild(section);
         
         for(let j = 0; j < course_data[index][i].time.length; ++j) {
-            const time = document.createElement("label");
+            const time = document.createElement("li");
             time.appendChild(document.createTextNode(course_data[index][i].time[j].day + " " + course_data[index][i].time[j].start_time + " - " + course_data[index][i].time[j].end_time));
-            pop_up_results.appendChild(time);
+            time_list.appendChild(time);
+            time_label_div.appendChild(time_list);
         }
+        pop_up_results.appendChild(time_label_div);
     }
 
     window.addEventListener("keydown", function(event) {
