@@ -189,6 +189,16 @@ function permutations(counter) {
     return total;
 }
 
+function save_schedule(saved_schedule) {
+    if(!localStorage.getItem("saved")) {
+        localStorage.setItem("saved", JSON.stringify(new Array()));
+    }
+
+    const arr = JSON.parse(localStorage.getItem("saved"));
+    arr.push(saved_schedule);
+    localStorage.setItem("saved", JSON.stringify(arr));
+}
+
 function print_schedule(schedule) {
     const table = document.querySelector(".table");
     const save_button = document.querySelector(".save_button");
@@ -197,9 +207,14 @@ function print_schedule(schedule) {
         return;
     }
 
-
     save_button.addEventListener("click", function() {
-        localStorage.setItem("saved", JSON.stringify(schedule));
+        save_schedule(schedule);
+    });
+    save_button.addEventListener("mouseover", function(){
+        save_button.style.backgroundColor = "blue";
+    });
+    save_button.addEventListener("mouseout", function(){
+        save_button.style.backgroundColor = "darkgray";
     });
 
     print_on_table(schedule, table);
@@ -267,9 +282,31 @@ function schedule_click() {
     next_button.addEventListener("click", function() {
         next_schedule(caption);
     });
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "ArrowRight") {
+            next_schedule(caption);
+        }
+    });
+    next_button.addEventListener("mouseover", function(){
+        next_button.style.backgroundColor = "blue";
+    });
+    next_button.addEventListener("mouseout", function(){
+        next_button.style.backgroundColor = "darkgray";
+    });
 
     prev_button.addEventListener("click", function() {
         previous_schedule(caption);
+    });
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "ArrowLeft") {
+            previous_schedule(caption);
+        }
+    });
+    prev_button.addEventListener("mouseover", function(){
+        prev_button.style.backgroundColor = "blue";
+    });
+    prev_button.addEventListener("mouseout", function(){
+        prev_button.style.backgroundColor = "darkgray";
     });
 }
 
@@ -420,6 +457,20 @@ function multiple_schedules() {
         if(event.key == "ArrowRight") {
             right_click();
         }
+    });
+
+    overview_prev.addEventListener("mouseover", function(){
+        overview_prev.style.backgroundColor = "blue";
+    });
+    overview_prev.addEventListener("mouseout", function(){
+        overview_prev.style.backgroundColor = "darkgray";
+    });
+
+    overview_next.addEventListener("mouseover", function(){
+        overview_next.style.backgroundColor = "blue";
+    });
+    overview_next.addEventListener("mouseout", function(){
+        overview_next.style.backgroundColor = "darkgray";
     });
 
     create_course_legend();
