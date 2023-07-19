@@ -107,6 +107,9 @@ function create_schedule() {
     
     // loop through all permutations
     for(let i = 0; i < total_permutations; ++i) {
+        if(table_in_table && schedule.length >= overview_start + table_height * table_width || check_counter_reached(counter)) {
+            break;
+        }
         const temp_schedule = new Array();
         let conflict = false;
 
@@ -148,11 +151,16 @@ function create_schedule() {
         }
         // go to the next possible permutation
         add_one(counter);
+    }
+}
 
-        if(table_in_table && schedule.length >= overview_start + table_height * table_width) {
-            break;
+function check_counter_reached(counter) {
+    for(let i = 0; i < counter.length; ++i) {
+        if(counter[i].limit != 0 && counter[i].count != counter[i].limit - 1) {
+            return false;
         }
     }
+    return true;
 }
 
 function add_one(counter) {
@@ -370,8 +378,14 @@ function multiple_schedules() {
         }
     }
     const right_click = function() {
-        overview_start += table_height * table_width;
-        generate_tables(table_in_table);
+        if(overview_start + table_height * table_width <= schedule.length) {
+            overview_start += table_height * table_width;
+            generate_tables(table_in_table);
+        }
+        else {
+            overview_start = 0;
+            generate_tables(table_in_table);
+        }
     }
 
     overview_prev.addEventListener("click", left_click);
