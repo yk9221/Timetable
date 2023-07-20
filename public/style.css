@@ -1,4 +1,4 @@
-.table, .overview_table {
+.table, .overview_table, .saved_table {
     background-color: white;
     border: 2px solid black;
     border-collapse: collapse;
@@ -21,22 +21,22 @@
     cursor: pointer;
 }
 
-.table thead, .overview_table thead {
+.table thead, .overview_table thead, .saved_table thead {
     background-color: gainsboro;
 }
 
-.table thead tr td, .table thead tr th, .table tbody tr td, .table tbody tr th, .overview_table thead tr td, .overview_table thead tr th, .overview_table tbody tr td, .overview_table tbody tr th {
+.table thead tr td, .table thead tr th, .table tbody tr td, .table tbody tr th, .overview_table thead tr td, .overview_table thead tr th, .overview_table tbody tr td, .overview_table tbody tr th, .saved_table thead tr td, .saved_table thead tr th, .saved_table tbody tr td, .saved_table tbody tr th {
     border: 1px solid black;
     padding: 10px;
     width: 100px;
     height: 37px;
 }
 
-.table_div {
+.table_div, .saved_table_div {
     margin-left: 20%;
 }
 
-.table_control {
+.table_control, .saved_table_control {
     margin-left: 20%;
 }
 
@@ -72,7 +72,7 @@
     width: 100%;
 }
 
-.next_course, .previous_course, .save_button {
+.next_course, .previous_course, .save_button, .saved_previous_course, .saved_next_course, .delete_saved_course {
     margin-top: -2%;
     padding-top: 1%;
     padding-bottom: 1%;
