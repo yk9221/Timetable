@@ -400,7 +400,7 @@ function delete_from_saved(saved_schedules, saved_table, saved_table_caption, in
     }
 
     loading.style.display = "flex";
-    searching_load_screen.innerHTML = "Removed Timetable " + (index + 1) + " from list"
+    searching_load_screen.innerHTML = "Removed Timetable " + (index + 1) + " from the list"
 
     saved_schedules.splice(index, 1);
     localStorage.setItem("saved", JSON.stringify(saved_schedules));

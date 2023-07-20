@@ -1,3 +1,7 @@
+* {
+    font-family:'Courier New', Courier, monospace
+}
+
 .table, .overview_table, .saved_table {
     background-color: white;
     border: 2px solid black;
@@ -6,6 +10,8 @@
     text-align: center;
     display: block;
     width: 100%;
+    margin-top: -5%;
+    font-size: 15px;
 }
 
 .overview_table {
@@ -36,15 +42,20 @@
     margin-left: 20%;
 }
 
+.table_caption, .saved_table_caption, .overview_table_caption {
+    font-size: 30px;
+}
+
 .table_control, .saved_table_control {
     margin-left: 20%;
+    margin-top: 2%;
 }
 
 .course_search {
     width: 20%;
     position: absolute;
     top: 25%;
-    left: 50%;
+    left: 47%;
     background-color: aliceblue;
     border-radius: 60px;
     padding-left: 2%;
@@ -59,7 +70,6 @@
 }
 
 .search_button {
-    margin-left: 12%;
     margin-top: 1%;
     width: 12%;
     height: auto;
@@ -73,16 +83,23 @@
 }
 
 .next_course, .previous_course, .save_button, .saved_previous_course, .saved_next_course, .delete_saved_course {
-    margin-top: -2%;
-    padding-top: 1%;
-    padding-bottom: 1%;
-    width: 6%;
+    padding-top: 0.5%;
+    padding-bottom: 0.3%;
+    width: 3%;
+    height: auto;
     border-radius: 20px;
-    font-size: 20px;
     border: none;
     background-color: darkgray;
     color: white;
     cursor: pointer;
+}
+
+.previous_course, .saved_previous_course {
+    margin-left: 5%;
+}
+
+.next_course, .save_button, .saved_next_course, .delete_saved_course {
+    margin-left: 1%;
 }
 
 .side_bar {
@@ -119,7 +136,7 @@
 
 .course_unordered_list {
     margin-top: 25%;
-    margin-left: 35%;
+    margin-left: 31%;
     width: 30%;
 }
 
@@ -136,7 +153,7 @@
 
 .course_list li span {
     position: absolute;
-    right: 29%;
+    right: 32.5%;
     text-align: center;
 }
 
@@ -163,9 +180,9 @@
     list-style-type: none;
 }
 
-.pop_up_results li {
+/* .pop_up_results li {
     margin: 10px;
-}
+} */
 
 .pop_up_results button {
     position: absolute;
@@ -179,7 +196,7 @@
 .clear_storage {
     cursor: pointer;
     font-size: 60px;
-    margin-left: 32%;
+    margin-left: 27%;
     margin-top: -12%;
     position: absolute;
     color: grey;
@@ -214,8 +231,8 @@
     cursor: pointer;
     position: relative;
     top: 40%;
-    left: 10%;
-    margin-left: 15%;
+    left: 8%;
+    margin-left: 10%;
 }
 
 .pop_up_results div {
@@ -279,12 +296,11 @@
 }
 
 .overview_prev, .overview_next {
-    margin-top: 3%;
-    padding-top: 1%;
-    padding-bottom: 1%;
-    width: 6%;
+    margin-top: 2%;
+    padding-top: 0.5%;
+    padding-bottom: 0.3%;
+    width: 4%;
     border-radius: 20px;
-    font-size: 20px;
     border: none;
     background-color: darkgray;
     color: white;
@@ -296,5 +312,5 @@
 }
 
 .overview_next {
-    margin-left: 63%;
+    margin-left: 67%;
 }
