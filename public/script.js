@@ -107,13 +107,18 @@ function create_schedule() {
     
     // loop through all permutations
     for(let i = 0; i < total_permutations; ++i) {
-        if(table_in_table && schedule.length >= overview_start + table_height * table_width || check_counter_reached(counter)) {
+        if(table_in_table && (schedule.length >= overview_start + table_height * table_width) || last_schedule) {
             break;
         }
+        if(check_counter_reached(counter)) {
+            last_schedule = true;
+        }
+
         const temp_schedule = new Array();
         let conflict = false;
+        let input_count = 0;
 
-        // initilize temporary schedule array with 5 days and 9 hours per day
+        // initilize temporary schedule array with 5 days and 12 hours per day
         for(let j = 0; j < days_of_week.size; ++j) {
             temp_schedule[j] = new Array(max_hours_per_day);
         }
@@ -134,6 +139,7 @@ function create_schedule() {
                             // if the time slot is empty then add it to the schedule
                             if(!temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m]) {
                                 temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m] = course;
+                                input_count++;
                             }
                             // otherwise raise the conflict flag
                             else {
@@ -146,11 +152,15 @@ function create_schedule() {
         }
 
         // if there were no conflicts then add it to the possible schedules
-        if(!conflict) {
+        if(!conflict && input_count != 0) {
             schedule.push(temp_schedule);
         }
         // go to the next possible permutation
         add_one(counter);
+
+        if(last_schedule) {
+            break;
+        }
     }
 }
 
@@ -189,6 +199,16 @@ function permutations(counter) {
     return total;
 }
 
+function print_all_schedules() {
+    const table = document.querySelector(".table");
+
+    if(!table) {
+        return;
+    }
+
+    create_schedule();
+}
+
 function print_schedule(schedule) {
     const table = document.querySelector(".table");
 
@@ -214,8 +234,23 @@ function print_on_table(schedule, table) {
     }
 }
 
+function print_blank_table(table, caption) {
+    for(let i = 0; i < days_of_week.size; ++i) {
+        for(let j = 0; j < max_hours_per_day; ++j) {
+            table.rows[j + 1].cells[i + 1].innerHTML = "";
+            table.rows[j + 1].cells[i + 1].style.backgroundColor = "white";
+        }
+    }
+    caption.innerHTML = "No saved timetables";
+}
+
 function next_schedule(caption) {
     if(!caption) {
+        return;
+    }
+
+    if(schedule.length == 0) {
+        caption.innerHTML = "No possible timetables";
         return;
     }
 
@@ -225,12 +260,16 @@ function next_schedule(caption) {
     }
 
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
-    caption.style.fontWeight = "bold";
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
 
 function previous_schedule(caption) {
     if(!caption) {
+        return;
+    }
+
+    if(schedule.length == 0) {
+        caption.innerHTML = "No possible timetables";
         return;
     }
 
@@ -243,11 +282,14 @@ function previous_schedule(caption) {
     }
 
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
-    caption.style.fontWeight = "bold";
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
 
 function check_saved_exists(saved_schedules, current_schedule) {
+    if(!current_schedule) {
+        return false;
+    }
+
     if(saved_schedules.length == 0) {
         return false;
     }
@@ -293,6 +335,25 @@ function save_message(message) {
     }, 1000);
 }
 
+function save_button_pressed(current_schedule, index) {
+    if(!localStorage.getItem("saved")) {
+        localStorage.setItem("saved", JSON.stringify(new Array()));
+    }
+
+    const arr = JSON.parse(localStorage.getItem("saved"));
+    if(!current_schedule) {
+        save_message("No schedule found");
+    }
+    else if(!check_saved_exists(arr, current_schedule)) {
+        arr.push(current_schedule);
+        save_message("Added Timetable " + (index + 1) + " to the list");
+    }
+    else {
+        save_message("Timetable " + (index + 1) + " already exists");
+    }
+    localStorage.setItem("saved", JSON.stringify(arr));
+}
+
 function schedule_click() {
     const next_button = document.querySelector(".next_course");
     const prev_button = document.querySelector(".previous_course");
@@ -306,25 +367,14 @@ function schedule_click() {
     }
 
     save_button.addEventListener("click", function() {
-        if(!localStorage.getItem("saved")) {
-            localStorage.setItem("saved", JSON.stringify(new Array()));
-        }
-    
-        const arr = JSON.parse(localStorage.getItem("saved"));
-        if(!check_saved_exists(arr, schedule[possibility_count % (schedule.length + 1) - 1])) {
-            arr.push(schedule[possibility_count % (schedule.length + 1) - 1]);
-            save_message("Added Timetable " + possibility_count % (schedule.length + 1) + " to the list");
-        }
-        else {
-            save_message("Timetable " + possibility_count % (schedule.length + 1) + " already exists");
-        }
-        localStorage.setItem("saved", JSON.stringify(arr));
+        const index = possibility_count % (schedule.length + 1) - 1;
+        save_button_pressed(schedule[index], index);
     });
     save_button.addEventListener("mouseover", function(){
-        save_button.style.backgroundColor = "blue";
+        save_button.style.backgroundColor = button_on_color;
     });
     save_button.addEventListener("mouseout", function(){
-        save_button.style.backgroundColor = "darkgray";
+        save_button.style.backgroundColor = button_background_color;
     });
 
     next_button.addEventListener("click", function() {
@@ -336,10 +386,10 @@ function schedule_click() {
         }
     });
     next_button.addEventListener("mouseover", function(){
-        next_button.style.backgroundColor = "blue";
+        next_button.style.backgroundColor = button_on_color;
     });
     next_button.addEventListener("mouseout", function(){
-        next_button.style.backgroundColor = "darkgray";
+        next_button.style.backgroundColor = button_background_color;
     });
 
     prev_button.addEventListener("click", function() {
@@ -351,10 +401,10 @@ function schedule_click() {
         }
     });
     prev_button.addEventListener("mouseover", function(){
-        prev_button.style.backgroundColor = "blue";
+        prev_button.style.backgroundColor = button_on_color;
     });
     prev_button.addEventListener("mouseout", function(){
-        prev_button.style.backgroundColor = "darkgray";
+        prev_button.style.backgroundColor = button_background_color;
     });
 }
 
@@ -369,7 +419,6 @@ function next_saved_schedule(saved_schedules, saved_table_caption, saved_table) 
     }
 
     print_on_table(saved_schedules[saved_count % (saved_schedules.length + 1) - 1], saved_table);
-    saved_table_caption.style.fontWeight = "bold";
     saved_table_caption.innerHTML = "Timetable " + (saved_count % (saved_schedules.length + 1)) + "/" + saved_schedules.length;
 }
 
@@ -387,7 +436,6 @@ function previous_saved_schedule(saved_schedules, saved_table_caption, saved_tab
     }
 
     print_on_table(saved_schedules[saved_count % (saved_schedules.length + 1) - 1], saved_table);
-    saved_table_caption.style.fontWeight = "bold";
     saved_table_caption.innerHTML = "Timetable " + (saved_count % (saved_schedules.length + 1)) + "/" + saved_schedules.length;
 }
 
@@ -407,6 +455,12 @@ function delete_from_saved(saved_schedules, saved_table, saved_table_caption, in
 
 
     if(saved_schedules.length == 0) {
+        print_blank_table(saved_table, saved_table_caption);
+        setTimeout(function() {
+            loading.style.display = "none";
+            searching_load_screen.innerHTML = "";
+        }, 1000);
+
         return;
     }
 
@@ -452,10 +506,10 @@ function print_saved_schedules() {
         }
     });
     saved_next_course.addEventListener("mouseover", function(){
-        saved_next_course.style.backgroundColor = "blue";
+        saved_next_course.style.backgroundColor = button_on_color;
     });
     saved_next_course.addEventListener("mouseout", function(){
-        saved_next_course.style.backgroundColor = "darkgray";
+        saved_next_course.style.backgroundColor = button_background_color;
     });
 
     saved_previous_course.addEventListener("click", function() {
@@ -467,20 +521,20 @@ function print_saved_schedules() {
         }
     });
     saved_previous_course.addEventListener("mouseover", function(){
-        saved_previous_course.style.backgroundColor = "blue";
+        saved_previous_course.style.backgroundColor = button_on_color;
     });
     saved_previous_course.addEventListener("mouseout", function(){
-        saved_previous_course.style.backgroundColor = "darkgray";
+        saved_previous_course.style.backgroundColor = button_background_color;
     });
 
     delete_saved_course.addEventListener("click", function() {
         delete_from_saved(saved_schedules, saved_table, saved_table_caption, saved_count % (saved_schedules.length + 1) - 1);
     });
     delete_saved_course.addEventListener("mouseover", function(){
-        delete_saved_course.style.backgroundColor = "blue";
+        delete_saved_course.style.backgroundColor = button_on_color;
     });
     delete_saved_course.addEventListener("mouseout", function(){
-        delete_saved_course.style.backgroundColor = "darkgray";
+        delete_saved_course.style.backgroundColor = button_background_color;
     });
 }
 
@@ -499,7 +553,6 @@ function print_zoomed_schedule(number) {
 
     print_on_table(schedule[number], overview_table);
     overview_table_caption.innerHTML = "Timetable " + (number + 1);
-    overview_table_caption.style.fontWeight = "bold";
 
     close_table.addEventListener("click", function() {
         schedule_zoom.style.display = "none";
@@ -535,7 +588,6 @@ function generate_tables(table_in_table) {
 
             const caption = document.createElement("caption");
             caption.appendChild(document.createTextNode("Timetable " + (overview_start + i * table_width + j + 1)));
-            caption.style.fontWeight = "bold";
             inner_table.appendChild(caption);
 
             for(let k = 0; k < max_hours_per_day; ++k) {
@@ -602,8 +654,11 @@ function multiple_schedules() {
     const table_in_table = document.querySelector(".table_in_table");
     const overview_prev = document.querySelector(".overview_prev");
     const overview_next = document.querySelector(".overview_next");
+    const overview_save_button = document.querySelector(".overview_save_button");
+    const overview_table_caption = document.querySelector(".overview_table_caption");
+    const course_view = document.querySelector(".course_view");
     
-    if(!table_in_table || !overview_prev || !overview_next) {
+    if(!table_in_table || !overview_prev || !overview_next || !overview_save_button || !overview_table_caption || !course_view) {
         return;
     }
 
@@ -638,21 +693,44 @@ function multiple_schedules() {
     });
 
     overview_prev.addEventListener("mouseover", function(){
-        overview_prev.style.backgroundColor = "blue";
+        overview_prev.style.backgroundColor = button_on_color;
     });
     overview_prev.addEventListener("mouseout", function(){
-        overview_prev.style.backgroundColor = "darkgray";
+        overview_prev.style.backgroundColor = button_background_color;
     });
 
     overview_next.addEventListener("mouseover", function(){
-        overview_next.style.backgroundColor = "blue";
+        overview_next.style.backgroundColor = button_on_color;
     });
     overview_next.addEventListener("mouseout", function(){
-        overview_next.style.backgroundColor = "darkgray";
+        overview_next.style.backgroundColor = button_background_color;
+    });
+
+    overview_save_button.addEventListener("click", function() {
+        const caption = overview_table_caption.innerHTML;
+        const index = caption.substring((caption.indexOf(" ") + 1), caption.length) - 1;
+        save_button_pressed(schedule[index], index);
+    });
+    overview_save_button.addEventListener("mouseover", function(){
+        overview_save_button.style.backgroundColor = button_on_color;
+    });
+    overview_save_button.addEventListener("mouseout", function(){
+        overview_save_button.style.backgroundColor = button_background_color;
     });
 
     create_course_legend();
     generate_tables(table_in_table);
+
+    if(schedule.length == 0) {
+        overview_prev.style.visibility = "hidden";
+        overview_next.style.visibility = "hidden";
+        course_view.style.visibility = "hidden";
+    }
+    else {
+        overview_prev.style.visibility = "visible";
+        overview_next.style.visibility = "visible";
+        course_view.style.visibility = "visible";
+    }
 }
 
 async function get_info(course_code) {
@@ -853,7 +931,27 @@ function remove_element(remove, item, course_list) {
         }
         localStorage.setItem("courses", JSON.stringify(courses));
         localStorage.setItem("course_data", JSON.stringify(course_data));
+
+        if(courses.length == 0) {
+            if(localStorage.getItem("course_term")) {
+                localStorage.removeItem("course_term");
+            }
+        }
     });
+}
+
+function parse_description(description) {
+    for(let i = 0; i < description.length; ++i) {
+        if(description[i] == "." && i != description.length - 1) {
+            const left = description.substring(0, i + 2);
+            const right = description.substring(i + 3);
+            description = left + description[i + 2].toUpperCase() + right;
+        }
+    }
+
+    description = description[0].toUpperCase() + description.substring(1, description.length);
+
+    return description;
 }
 
 function press_course_list(item) {
@@ -884,6 +982,9 @@ function press_course_list(item) {
 
     if(!course_description) {
         return;
+    }
+    else {
+        course_description = parse_description(course_description);
     }
 
     pop_up.style.display = "flex";
@@ -1094,7 +1195,7 @@ function multiple_searches(results, search) {
         });
 
         item.addEventListener("mouseover", function(){
-            item.style.color = "blue";
+            item.style.color = button_on_color;
         });
 
         item.addEventListener("mouseout", function(){
@@ -1323,7 +1424,7 @@ function open_filter() {
     });
 
     filter.addEventListener("mouseover", function() {
-        filter.style.color = "blue";
+        filter.style.color = button_on_color;
     });
 
     filter.addEventListener("mouseout", function() {
@@ -1400,7 +1501,7 @@ function open_exclude() {
     });
 
     exclude.addEventListener("mouseover", function() {
-        exclude.style.color = "blue";
+        exclude.style.color = button_on_color;
     });
 
     exclude.addEventListener("mouseout", function() {
@@ -1411,8 +1512,9 @@ function open_exclude() {
 function main() {
     parse_json();
     create_permutations();
-    create_schedule();
 
+    print_all_schedules();
+    print_saved_schedules();
     multiple_schedules();
 
     clear_local_storage();
@@ -1422,7 +1524,6 @@ function main() {
     open_filter();
     open_exclude();
 
-    print_saved_schedules();
 }
 
 const course_code_map = new Map();
@@ -1478,11 +1579,15 @@ let possibility_count = 0;
 let saved_count = 0;
 let total_permutations = 0;
 let overview_start = 0;
+let last_schedule = false;
 const table_height = 2;
 const table_width = 7;
 const max_hours_per_day = 12;
 const all_courses = new Array();
 const counter = new Array();
 const schedule = new Array();
+
+const button_background_color = "darkgray";
+const button_on_color = "lightblue";
 
 main();
