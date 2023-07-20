@@ -1,5 +1,9 @@
 * {
-    font-family:'Courier New', Courier, monospace
+    font-family:'Courier New', Courier, monospace;
+}
+
+.instructions {
+    margin-left: 5%;
 }
 
 .table, .overview_table, .saved_table {
@@ -115,7 +119,7 @@
     z-index: 1;
     top: 0;
     left: 0;
-    background-color: lightgray;
+    background: linear-gradient(gray, azure);
     overflow-x: hidden;
     padding-top: 20px;
 }
@@ -202,6 +206,7 @@
     margin-top: -12%;
     position: absolute;
     color: grey;
+    font-weight: bold;
 }
 
 .loading {
