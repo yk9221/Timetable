@@ -580,6 +580,7 @@ function find_course(course_code) {
     const course_info = get_info(course_code);
     const loading = document.querySelector(".loading");
     const searching_load_screen = document.querySelector(".searching_load_screen");
+    const search_text = document.querySelector(".search_text");
 
     course_info.then(result => {
         // no result found
@@ -615,7 +616,9 @@ function find_course(course_code) {
         setTimeout(function() {
             loading.style.display = "none";
             searching_load_screen.innerHTML = "";
-        }, 1500);
+            search_text.removeAttribute("disabled");
+            search_text.focus();
+        }, 1000);
     });
 }
 
@@ -647,6 +650,7 @@ function searched() {
         return;
     }
 
+    search_text.setAttribute("disabled", "disabled");
     loading.style.display = "flex";
     searching_load_screen.innerHTML = "Searching for " + search_text.value + "...";
 
@@ -899,7 +903,7 @@ function multiple_searches(results, search) {
                 setTimeout(function() {
                     loading.style.display = "none";
                     searching_load_screen.innerHTML = "";
-                }, 1500);
+                }, 1000);
             });
 
         });
