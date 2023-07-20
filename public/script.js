@@ -249,6 +249,9 @@ function next_schedule(caption) {
         return;
     }
 
+    const saved_icon = document.querySelector(".saved_icon");
+    const saved = JSON.parse(localStorage.getItem("saved"));
+
     if(schedule.length == 0) {
         caption.innerHTML = "No possible timetables";
         return;
@@ -261,12 +264,24 @@ function next_schedule(caption) {
 
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
+
+    if(saved) {
+        if(check_saved_exists(saved, schedule[possibility_count % (schedule.length + 1) - 1]) != -1) {
+            saved_icon.setAttribute("src", "./icons/saved.png");
+        }
+        else {
+            saved_icon.setAttribute("src", "./icons/not_saved.png");
+        }
+    }
 }
 
 function previous_schedule(caption) {
     if(!caption) {
         return;
     }
+
+    const saved_icon = document.querySelector(".saved_icon");
+    const saved = JSON.parse(localStorage.getItem("saved"));
 
     if(schedule.length == 0) {
         caption.innerHTML = "No possible timetables";
@@ -283,15 +298,22 @@ function previous_schedule(caption) {
 
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
+
+    if(check_saved_exists(saved, schedule[possibility_count % (schedule.length + 1) - 1]) != -1) {
+        saved_icon.setAttribute("src", "./icons/saved.png");
+    }
+    else {
+        saved_icon.setAttribute("src", "./icons/not_saved.png");
+    }
 }
 
 function check_saved_exists(saved_schedules, current_schedule) {
     if(!current_schedule) {
-        return false;
+        return -1;
     }
 
     if(saved_schedules.length == 0) {
-        return false;
+        return -1;
     }
     for(let i = 0; i < saved_schedules.length; ++i) {
         let match = true;
@@ -310,29 +332,12 @@ function check_saved_exists(saved_schedules, current_schedule) {
             }
         }
         if(match) {
-            return true;
+            return i;
         }
         else if(!match && i == saved_schedules.length - 1) {
-            return false;
+            return -1;
         }
     }
-}
-
-function save_message(message) {
-    const loading = document.querySelector(".loading");
-    const searching_load_screen = document.querySelector(".searching_load_screen");
-
-    if(!loading || !searching_load_screen) {
-        return;
-    }
-
-    loading.style.display = "flex";
-    searching_load_screen.innerHTML = message;
-
-    setTimeout(function() {
-        loading.style.display = "none";
-        searching_load_screen.innerHTML = "";
-    }, 1000);
 }
 
 function save_button_pressed(current_schedule, index) {
@@ -340,18 +345,19 @@ function save_button_pressed(current_schedule, index) {
         localStorage.setItem("saved", JSON.stringify(new Array()));
     }
 
-    const arr = JSON.parse(localStorage.getItem("saved"));
-    if(!current_schedule) {
-        save_message("No schedule found");
-    }
-    else if(!check_saved_exists(arr, current_schedule)) {
-        arr.push(current_schedule);
-        save_message("Added Timetable " + (index + 1) + " to the list");
+    const saved = JSON.parse(localStorage.getItem("saved"));
+    const saved_icon = document.querySelector(".saved_icon");
+    const save_index = check_saved_exists(saved, current_schedule);
+
+    if(save_index == -1) {
+        saved.push(current_schedule);
+        saved_icon.setAttribute("src", "./icons/saved.png");
     }
     else {
-        save_message("Timetable " + (index + 1) + " already exists");
+        saved.splice(save_index, 1);
+        saved_icon.setAttribute("src", "./icons/not_saved.png");
     }
-    localStorage.setItem("saved", JSON.stringify(arr));
+    localStorage.setItem("saved", JSON.stringify(saved));
 }
 
 function schedule_click() {
@@ -440,26 +446,11 @@ function previous_saved_schedule(saved_schedules, saved_table_caption, saved_tab
 }
 
 function delete_from_saved(saved_schedules, saved_table, saved_table_caption, index) {
-    const loading = document.querySelector(".loading");
-    const searching_load_screen = document.querySelector(".searching_load_screen");
-
-    if(!loading || !searching_load_screen) {
-        return;
-    }
-
-    loading.style.display = "flex";
-    searching_load_screen.innerHTML = "Removed Timetable " + (index + 1) + " from the list"
-
     saved_schedules.splice(index, 1);
     localStorage.setItem("saved", JSON.stringify(saved_schedules));
 
-
     if(saved_schedules.length == 0) {
         print_blank_table(saved_table, saved_table_caption);
-        setTimeout(function() {
-            loading.style.display = "none";
-            searching_load_screen.innerHTML = "";
-        }, 1000);
 
         return;
     }
@@ -470,12 +461,6 @@ function delete_from_saved(saved_schedules, saved_table, saved_table_caption, in
 
     saved_table_caption.innerHTML = "Timetable " + saved_count % (saved_schedules.length + 1) + "/" + saved_schedules.length;
     print_on_table(saved_schedules[index % saved_schedules.length], saved_table);
-
-    setTimeout(function() {
-        loading.style.display = "none";
-        searching_load_screen.innerHTML = "";
-    }, 1000);
-
 }
 
 function print_saved_schedules() {
@@ -544,9 +529,18 @@ function print_zoomed_schedule(number) {
     const overview_table = document.querySelector(".overview_table");
     const overview_table_caption = document.querySelector(".overview_table_caption");
     const close_table = document.querySelector(".close_table");
+    const saved_icon = document.querySelector(".saved_icon");
+    const saved = JSON.parse(localStorage.getItem("saved"));
 
-    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table) {
+    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table || !saved_icon || !saved) {
         return;
+    }
+
+    if(check_saved_exists(saved, schedule[number]) != -1) {
+        saved_icon.setAttribute("src", "./icons/saved.png");
+    }
+    else {
+        saved_icon.setAttribute("src", "./icons/not_saved.png");
     }
 
     schedule_zoom.style.display = "flex";
