@@ -247,6 +247,52 @@ function previous_schedule(caption) {
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 }
 
+function check_saved_exists(saved_schedules, current_schedule) {
+    if(saved_schedules.length == 0) {
+        return false;
+    }
+    for(let i = 0; i < saved_schedules.length; ++i) {
+        let match = true;
+        for(let j = 0; j < saved_schedules[i].length; ++j) {
+            for(let k = 0; k < saved_schedules[i][j].length; ++k) {
+                if(saved_schedules[i][j][k] && current_schedule[j][k]) {
+                    if(saved_schedules[i][j][k].course_code != current_schedule[j][k].course_code ||
+                        saved_schedules[i][j][k].section.section_type != current_schedule[j][k].section.section_type ||
+                        saved_schedules[i][j][k].section.section_num != current_schedule[j][k].section.section_num) {
+                        match = false;
+                    }
+                }
+                else if(saved_schedules[i][j][k] && !current_schedule[j][k] || !saved_schedules[i][j][k] && current_schedule[j][k]) {
+                    match = false;
+                }
+            }
+        }
+        if(match) {
+            return true;
+        }
+        else if(!match && i == saved_schedules.length - 1) {
+            return false;
+        }
+    }
+}
+
+function save_message(message) {
+    const loading = document.querySelector(".loading");
+    const searching_load_screen = document.querySelector(".searching_load_screen");
+
+    if(!loading || !searching_load_screen) {
+        return;
+    }
+
+    loading.style.display = "flex";
+    searching_load_screen.innerHTML = message;
+
+    setTimeout(function() {
+        loading.style.display = "none";
+        searching_load_screen.innerHTML = "";
+    }, 1000);
+}
+
 function schedule_click() {
     const next_button = document.querySelector(".next_course");
     const prev_button = document.querySelector(".previous_course");
@@ -265,7 +311,13 @@ function schedule_click() {
         }
     
         const arr = JSON.parse(localStorage.getItem("saved"));
-        arr.push(schedule[possibility_count % (schedule.length + 1) - 1]);
+        if(!check_saved_exists(arr, schedule[possibility_count % (schedule.length + 1) - 1])) {
+            arr.push(schedule[possibility_count % (schedule.length + 1) - 1]);
+            save_message("Added Timetable " + possibility_count % (schedule.length + 1) + " to the list");
+        }
+        else {
+            save_message("Timetable " + possibility_count % (schedule.length + 1) + " already exists");
+        }
         localStorage.setItem("saved", JSON.stringify(arr));
     });
     save_button.addEventListener("mouseover", function(){
@@ -340,8 +392,19 @@ function previous_saved_schedule(saved_schedules, saved_table_caption, saved_tab
 }
 
 function delete_from_saved(saved_schedules, saved_table, saved_table_caption, index) {
+    const loading = document.querySelector(".loading");
+    const searching_load_screen = document.querySelector(".searching_load_screen");
+
+    if(!loading || !searching_load_screen) {
+        return;
+    }
+
+    loading.style.display = "flex";
+    searching_load_screen.innerHTML = "Removed Timetable " + (index + 1) + " from list"
+
     saved_schedules.splice(index, 1);
     localStorage.setItem("saved", JSON.stringify(saved_schedules));
+
 
     if(saved_schedules.length == 0) {
         return;
@@ -353,6 +416,12 @@ function delete_from_saved(saved_schedules, saved_table, saved_table_caption, in
 
     saved_table_caption.innerHTML = "Timetable " + saved_count % (saved_schedules.length + 1) + "/" + saved_schedules.length;
     print_on_table(saved_schedules[index % saved_schedules.length], saved_table);
+
+    setTimeout(function() {
+        loading.style.display = "none";
+        searching_load_screen.innerHTML = "";
+    }, 1000);
+
 }
 
 function print_saved_schedules() {
