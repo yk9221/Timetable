@@ -368,7 +368,6 @@ function save_button_pressed(current_schedule) {
 
     if(save_index == -1) {
         saved.push(current_schedule);
-        console.log(current_schedule)
         saved_icon.setAttribute("src", "./icons/saved.png");
     }
     else {
@@ -1318,7 +1317,8 @@ function sort_course_data(data) {
                     course_term: data[i][j].course_term,
                     teach_method: data[i][j].teach_method,
                     section_number: data[i][j].section_number,
-                    time: data[i][j].time
+                    time: data[i][j].time,
+                    waitlist: data[i][j].waitlist
                 });
             }
             else if(data[i][j].teach_method == "TUT") {
@@ -1328,7 +1328,8 @@ function sort_course_data(data) {
                     course_term: data[i][j].course_term,
                     teach_method: data[i][j].teach_method,
                     section_number: data[i][j].section_number,
-                    time: data[i][j].time
+                    time: data[i][j].time,
+                    waitlist: data[i][j].waitlist
                 });
             }
             else if(data[i][j].teach_method == "PRA") {
@@ -1338,7 +1339,8 @@ function sort_course_data(data) {
                     course_term: data[i][j].course_term,
                     teach_method: data[i][j].teach_method,
                     section_number: data[i][j].section_number,
-                    time: data[i][j].time
+                    time: data[i][j].time,
+                    waitlist: data[i][j].waitlist
                 });
             }
         }
@@ -1487,7 +1489,7 @@ function open_exclude() {
                 check_box.checked = !find_exclude_in_storage("exclude", course_data[i][j]);
                 check_box_label.style.marginBottom = "3%";
                 check_box_label.appendChild(check_box);
-                check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number));
+                check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number + (course_data[i][j].waitlist != 0 ? " → Waitlist: " + course_data[i][j].waitlist : "")));
                 list.appendChild(check_box_label);
 
                 pop_up_results.appendChild(list);

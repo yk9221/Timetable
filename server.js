@@ -201,13 +201,15 @@ function parse_course_info(course_code, data, course_term, course_description) {
             const section_number = part_html("sectionnumber");
             const starts = part_html("start");
             const ends = part_html("end");
+            const waitlist = part_html("currentWaitlist");
 
             course_info[i - 1] = {
                 course_code: course_code,
                 course_term: course_term,
                 teach_method: teach_method.text(),
                 section_number: section_number.text(),
-                course_description: course_description
+                course_description: course_description,
+                waitlist: waitlist.text()
             };
             course_info[i - 1]["time"] = new Array();
 
