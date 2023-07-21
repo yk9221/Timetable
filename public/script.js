@@ -220,15 +220,32 @@ function print_schedule(schedule) {
 }
 
 function print_on_table(schedule, table) {
+    let insert_count = 0;
+
     for(let i = 0; i < schedule.length; ++i) {
         for(let j = 0; j < schedule[i].length; ++j) {
             if(schedule[i][j]) {
                 table.rows[j + 1].cells[i + 1].innerHTML = "<b>" + schedule[i][j].course_code + "</b>" + "<br>" + schedule[i][j].section.section_type + schedule[i][j].section.section_num;
+                
+                if(!colors.get(course_code_map.get(schedule[i][j].course_code))) {
+                    course_code_map.set(schedule[i][j].course_code, course_code_map.size);
+                    insert_count++;
+                }
+
                 table.rows[j + 1].cells[i + 1].style.backgroundColor = colors.get(course_code_map.get(schedule[i][j].course_code));
             }
             else {
                 table.rows[j + 1].cells[i + 1].innerHTML = "";
                 table.rows[j + 1].cells[i + 1].style.backgroundColor = "white";
+            }
+        }
+    }
+
+    const initial_length = course_code_map.size;
+    for(let [key, value] of course_code_map.entries()) {
+        for(let i = 0; i < insert_count; ++i) {
+            if(value == initial_length - i) {
+                course_code_map.delete(key);
             }
         }
     }
@@ -340,7 +357,7 @@ function check_saved_exists(saved_schedules, current_schedule) {
     }
 }
 
-function save_button_pressed(current_schedule, index) {
+function save_button_pressed(current_schedule) {
     if(!localStorage.getItem("saved")) {
         localStorage.setItem("saved", JSON.stringify(new Array()));
     }
@@ -351,6 +368,7 @@ function save_button_pressed(current_schedule, index) {
 
     if(save_index == -1) {
         saved.push(current_schedule);
+        console.log(current_schedule)
         saved_icon.setAttribute("src", "./icons/saved.png");
     }
     else {
