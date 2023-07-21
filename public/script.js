@@ -532,16 +532,19 @@ function print_zoomed_schedule(number) {
     const saved_icon = document.querySelector(".saved_icon");
     const saved = JSON.parse(localStorage.getItem("saved"));
 
-    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table || !saved_icon || !saved) {
+    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table || !saved_icon) {
         return;
     }
 
-    if(check_saved_exists(saved, schedule[number]) != -1) {
-        saved_icon.setAttribute("src", "./icons/saved.png");
+    if(saved) {
+        if(check_saved_exists(saved, schedule[number]) != -1) {
+            saved_icon.setAttribute("src", "./icons/saved.png");
+        }
+        else {
+            saved_icon.setAttribute("src", "./icons/not_saved.png");
+        }
     }
-    else {
-        saved_icon.setAttribute("src", "./icons/not_saved.png");
-    }
+
 
     schedule_zoom.style.display = "flex";
 
