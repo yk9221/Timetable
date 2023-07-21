@@ -138,6 +138,13 @@ function create_schedule() {
 
                             // if the time slot is empty then add it to the schedule
                             if(!temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m]) {
+                                const preference_start_time = JSON.parse(localStorage.getItem("start_time"));
+                                const preference_end_time = JSON.parse(localStorage.getItem("end_time"));
+
+                                if(time[l].start_time < preference_start_time || time[l].start_time + time[l].duration > preference_end_time) {
+                                    conflict = true;
+                                }
+
                                 temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m] = course;
                                 input_count++;
                             }
@@ -325,7 +332,7 @@ function previous_schedule(caption) {
 }
 
 function check_saved_exists(saved_schedules, current_schedule) {
-    if(!current_schedule) {
+    if(!current_schedule || !saved_schedules) {
         return -1;
     }
 
@@ -685,7 +692,7 @@ function multiple_schedules() {
     const right_click = function() {
         if(overview_start + table_height * table_width <= schedule.length) {
             overview_start += table_height * table_width;
-            generate_tables(table_in_table);
+            generate_tables(table_in_table)
         }
         else {
             overview_start = 0;
@@ -1139,6 +1146,8 @@ function clear_local_storage() {
             session_list[0],
             session_list[2]
         )));
+        localStorage.setItem("start_time", 9);
+        localStorage.setItem("end_time", 21);
     });
 }
 
@@ -1526,6 +1535,128 @@ function open_exclude() {
     });
 }
 
+function convert_am_pm(time) {
+    if(parseInt(time) < 12) {
+        return time + "am";
+    }
+    else if(parseInt(time) == 12) {
+        return time + "pm";
+    }
+    else {
+        return (parseInt(time) - 12) + "pm";
+    }
+}
+
+function open_preference() {
+    const preference = document.querySelector(".preference");
+    const pop_up = document.querySelector(".pop_up");
+    const pop_up_results = document.querySelector(".pop_up_results");
+
+    if(!preference || !pop_up || !pop_up_results) {
+        return;
+    }
+    
+    preference.addEventListener("click", function() {
+        const close_preference = document.createElement("button");
+
+        pop_up.style.display = "flex";
+
+        close_preference.appendChild(document.createTextNode("X"));
+        pop_up_results.appendChild(close_preference);
+
+        const start_label = document.createElement("label");
+        const start_time_slider = document.createElement("input");
+        const start_time_label = document.createElement("label");
+        const start_div = document.createElement("div");
+
+        start_label.style.fontWeight = "bold";
+        start_label.style.marginRight = "20%";
+
+        start_time_slider.type = "range";
+        start_time_slider.min = 9;
+        start_time_slider.max = 20;
+        start_time_slider.value = JSON.parse(localStorage.getItem("start_time"));
+
+        start_time_label.style.marginLeft = "2%";
+
+        start_label.appendChild(document.createTextNode(preference_list[0]));
+        start_time_label.appendChild(document.createTextNode(convert_am_pm(start_time_slider.value)));
+        start_div.appendChild(start_label);
+        start_div.appendChild(start_time_slider);
+        start_div.appendChild(start_time_label);
+        pop_up_results.appendChild(start_div);
+
+        const end_label = document.createElement("label");
+        const end_time_slider = document.createElement("input");
+        const end_time_label = document.createElement("label");
+        const end_div = document.createElement("div");
+
+        end_label.style.fontWeight = "bold";
+        end_label.style.marginRight = "22.6%";
+
+        end_time_slider.type = "range";
+        end_time_slider.min = 10;
+        end_time_slider.max = 21;
+        end_time_slider.value = JSON.parse(localStorage.getItem("end_time"));
+
+        end_time_label.style.marginLeft = "2%";
+
+        end_label.appendChild(document.createTextNode(preference_list[1]));
+        end_time_label.appendChild(document.createTextNode(convert_am_pm(end_time_slider.value)));
+        end_div.appendChild(end_label);
+        end_div.appendChild(end_time_slider);
+        end_div.appendChild(end_time_label);
+        pop_up_results.appendChild(end_div);
+
+
+
+
+        start_time_slider.addEventListener("change", function() {
+            start_time_label.innerHTML = convert_am_pm(start_time_slider.value);
+
+            if(parseInt(end_time_slider.value) < parseInt(start_time_slider.value)) {
+                end_time_slider.value = start_time_slider.value;
+                end_time_label.innerHTML = convert_am_pm(end_time_slider.value);
+
+                localStorage.setItem("end_time", end_time_slider.value);
+            }
+            localStorage.setItem("start_time", start_time_slider.value);
+        });
+
+        end_time_slider.addEventListener("change", function() {
+            end_time_label.innerHTML = convert_am_pm(end_time_slider.value);
+
+            if(parseInt(end_time_slider.value) < parseInt(start_time_slider.value)) {
+                start_time_slider.value = end_time_slider.value;
+                start_time_label.innerHTML = convert_am_pm(start_time_slider.value);
+
+                localStorage.setItem("start_time", start_time_slider.value);
+            }
+            localStorage.setItem("end_time", end_time_slider.value);
+        });
+
+        close_preference.addEventListener("click", function() {
+            pop_up.style.display = "none";
+            pop_up_results.innerHTML = "";
+        });
+        
+        window.addEventListener("keydown", function(event) {
+            if(event.key == "Escape") {
+                pop_up.style.display = "none";
+                pop_up_results.innerHTML = "";
+            }
+        });
+    });
+
+    preference.addEventListener("mouseover", function() {
+        preference.style.color = button_on_color;
+    });
+
+    preference.addEventListener("mouseout", function() {
+        preference.style.color = "black";
+    });
+}
+
 function main() {
     parse_json();
     create_permutations();
@@ -1540,7 +1671,7 @@ function main() {
     schedule_click();
     open_filter();
     open_exclude();
-
+    open_preference();
 }
 
 const course_code_map = new Map();
@@ -1588,6 +1719,10 @@ const session_list_map = new Map([
     [session_list[1], "20241"],
     [session_list[2], "20239-20241"]
 ]);
+const preference_list = [
+    "Start Time",
+    "End Time"
+]
 
 const baseUrl = "http://localhost:3000/";
 

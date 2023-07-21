@@ -234,12 +234,11 @@
     color: red;
 }
 
-.filter, .exclude {
+.filter, .exclude, .preference {
     cursor: pointer;
     position: relative;
     top: 40%;
-    left: 8%;
-    margin-left: 10%;
+    margin-left: 3%;
 }
 
 .pop_up_results div {
