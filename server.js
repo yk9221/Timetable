@@ -199,9 +199,15 @@ function parse_course_info(course_code, data, course_term, course_description) {
             const part_html = cheerio.load(section_element.html());
             const teach_method = part_html("teachmethod");
             const section_number = part_html("sectionnumber");
+            const waitlist = part_html("currentWaitlist");
+            const current_enrolment = part_html("currentEnrolment");
+            const max_enrolment = part_html("maxEnrolment");
             const starts = part_html("start");
             const ends = part_html("end");
-            const waitlist = part_html("currentWaitlist");
+            const building_codes = part_html("buildingCode");
+            const building_room_numbers = part_html("buildingRoomNumber");
+            const first_names = part_html("firstName");
+            const last_names = part_html("lastName");
 
             course_info[i - 1] = {
                 course_code: course_code,
@@ -209,15 +215,21 @@ function parse_course_info(course_code, data, course_term, course_description) {
                 teach_method: teach_method.text(),
                 section_number: section_number.text(),
                 course_description: course_description,
-                waitlist: waitlist.text()
+                waitlist: waitlist.text(),
+                current_enrolment: current_enrolment.text(),
+                max_enrolment: max_enrolment.text()
             };
             course_info[i - 1]["time"] = new Array();
-
+            course_info[i - 1]["building"] = new Array();
+            course_info[i - 1]["instructor"] = new Array();
 
             for(let j = 0; j < starts.length; ++j) {
                 const start = part_html(starts[j]);
                 const end = part_html(ends[j]);
                 const day = start.text()[0];
+
+                const building_code = part_html(building_codes[j]);
+                const building_room_number = part_html(building_room_numbers[j]);
 
                 let same_time = false;
                 const time_object = {
@@ -235,6 +247,14 @@ function parse_course_info(course_code, data, course_term, course_description) {
                 if(!same_time) {
                     course_info[i - 1]["time"].push(time_object);
                 }
+                course_info[i - 1]["building"].push(building_code.text() + " " + building_room_number.text());
+            }
+
+            for(let j = 0; j < first_names.length; ++j) {
+                const first_name = part_html(first_names[j]);
+                const last_name = part_html(last_names[j]);
+
+                course_info[i - 1]["instructor"].push(first_name.text() + " " + last_name.text());
             }
         }
     }

@@ -199,6 +199,20 @@
     cursor: pointer;
 }
 
+.pop_up_results table {
+    border: 2px solid black;
+    border-collapse: collapse;
+    border-style: none;
+    text-align: center;
+    font-size: 15px;
+    margin-top: 1%;
+    margin-bottom: 3%;
+}
+
+.pop_up_results th, .pop_up_results td {
+    border: 1px solid black;
+}
+
 .clear_storage {
     cursor: pointer;
     font-size: 60px;

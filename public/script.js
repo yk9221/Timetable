@@ -981,7 +981,7 @@ function press_course_list(item) {
     const pop_up_results = document.querySelector(".pop_up_results");
     const course_label_div = document.createElement("div");
     const description_label_div = document.createElement("div");
-    const time_label_div = document.createElement("div");
+    const course_info_div = document.createElement("div");
     const course_label = document.createElement("label");
     const description_label = document.createElement("label");
     const close = document.createElement("button");
@@ -1009,6 +1009,8 @@ function press_course_list(item) {
     }
 
     pop_up.style.display = "flex";
+    pop_up_results.style.width = "70%";
+    pop_up_results.style.height = "60%";
 
     course_label.appendChild(document.createTextNode(item.innerHTML.substring(0, item.innerHTML.indexOf("<"))));
     course_label.style.fontWeight = "bold";
@@ -1025,31 +1027,108 @@ function press_course_list(item) {
 
     for(let i = 0; i < course_data[index].length; ++i) {
         const section = document.createElement("label");
-        const time_list = document.createElement("ul");
+        const table = document.createElement("table");
+        const info_num = 4;
+
+        table.style.border = "2px solid black";
 
         section.appendChild(document.createTextNode(course_data[index][i].teach_method + course_data[index][i].section_number));
         section.style.fontWeight = "bold";
-        time_label_div.appendChild(section);
+        section.style.fontSize = "20px";
+        course_info_div.appendChild(section);
         
+        const tr_head = document.createElement("tr");
+        const tr_body = document.createElement("tr");
+
+        for(let j = 0; j < info_num; ++j) {
+            const th = document.createElement("th");
+            th.appendChild(document.createTextNode(description_table_list[j]));
+            tr_head.appendChild(th);
+        }
+
+        const time_list = document.createElement("ul");
+        const time_td = document.createElement("td");
         for(let j = 0; j < course_data[index][i].time.length; ++j) {
             const time = document.createElement("li");
-            time.appendChild(document.createTextNode(course_data[index][i].time[j].day + " " + course_data[index][i].time[j].start_time + " - " + course_data[index][i].time[j].end_time));
+            time.appendChild(document.createTextNode(course_data[index][i].time[j].day + " " + convert_am_pm(course_data[index][i].time[j].start_time) + " - " + convert_am_pm(course_data[index][i].time[j].end_time)));
             time_list.appendChild(time);
-            time_label_div.appendChild(time_list);
         }
-        pop_up_results.appendChild(time_label_div);
+        time_td.appendChild(time_list);
+        tr_body.appendChild(time_td);
+
+        const building_list = document.createElement("ul");
+        const building_td = document.createElement("td");
+        for(let j = 0; j < course_data[index][i].building.length; ++j) {
+            const building = document.createElement("li");
+            building.appendChild(document.createTextNode(course_data[index][i].building[j]));
+            building_list.appendChild(building);
+        }
+        building_td.appendChild(building_list);
+        tr_body.appendChild(building_td);
+
+        const instructor_list = document.createElement("ul");
+        const instructor_td = document.createElement("td");
+        for(let j = 0; j < course_data[index][i].instructor.length; ++j) {
+            const instructor = document.createElement("li");
+            instructor.appendChild(document.createTextNode(course_data[index][i].instructor[j]));
+            instructor_list.appendChild(instructor);
+        }
+        if(course_data[index][i].instructor.length == 0) {
+            const instructor = document.createElement("li");
+            instructor.appendChild(document.createTextNode("TBA"));
+            instructor_list.appendChild(instructor);
+        }
+        instructor_td.appendChild(instructor_list);
+        tr_body.appendChild(instructor_td);
+
+        const space_list = document.createElement("ul");
+        const space_td = document.createElement("td");
+        const space = document.createElement("li");
+
+        const waitlist_num = JSON.parse(course_data[index][i].waitlist);
+        const current_enrolment_num = JSON.parse(course_data[index][i].current_enrolment);
+        const max_enrolment_num = JSON.parse(course_data[index][i].max_enrolment);
+
+        if(current_enrolment_num == max_enrolment_num) {
+            if(waitlist_num == 0) {
+                space.appendChild(document.createTextNode("Section Full"));
+                space_list.appendChild(space);
+            }
+            else {
+                const waitlist = document.createElement("li");
+                space.appendChild(document.createTextNode("Section Full"));
+                waitlist.appendChild(document.createTextNode("Waitlist: " + waitlist_num));
+                space_list.appendChild(space);
+                space_list.appendChild(waitlist);
+            }
+        }
+        else {
+            space.appendChild(document.createTextNode((max_enrolment_num - current_enrolment_num) + " of " + max_enrolment_num + " available"));
+            space_list.appendChild(space);
+        }
+        space_td.appendChild(space_list);
+        tr_body.appendChild(space_td);
+
+        table.appendChild(tr_head);
+        table.appendChild(tr_body);
+        course_info_div.appendChild(table);
+        pop_up_results.appendChild(course_info_div);
     }
 
     window.addEventListener("keydown", function(event) {
         if(event.key == "Escape") {
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
+            pop_up_results.style.width = "50%";
+            pop_up_results.style.height = "40%";
         }
     });
 
     close.addEventListener("click", function() {
         pop_up.style.display = "none";
         pop_up_results.innerHTML = "";
+        pop_up_results.style.width = "50%";
+        pop_up_results.style.height = "40%";
     });
 }
 
@@ -1327,7 +1406,11 @@ function sort_course_data(data) {
                     teach_method: data[i][j].teach_method,
                     section_number: data[i][j].section_number,
                     time: data[i][j].time,
-                    waitlist: data[i][j].waitlist
+                    waitlist: data[i][j].waitlist,
+                    current_enrolment: data[i][j].current_enrolment,
+                    max_enrolment: data[i][j].max_enrolment,
+                    building: data[i][j].building,
+                    instructor: data[i][j].instructor
                 });
             }
             else if(data[i][j].teach_method == "TUT") {
@@ -1338,7 +1421,11 @@ function sort_course_data(data) {
                     teach_method: data[i][j].teach_method,
                     section_number: data[i][j].section_number,
                     time: data[i][j].time,
-                    waitlist: data[i][j].waitlist
+                    waitlist: data[i][j].waitlist,
+                    current_enrolment: data[i][j].current_enrolment,
+                    max_enrolment: data[i][j].max_enrolment,
+                    building: data[i][j].building,
+                    instructor: data[i][j].instructor
                 });
             }
             else if(data[i][j].teach_method == "PRA") {
@@ -1349,7 +1436,11 @@ function sort_course_data(data) {
                     teach_method: data[i][j].teach_method,
                     section_number: data[i][j].section_number,
                     time: data[i][j].time,
-                    waitlist: data[i][j].waitlist
+                    waitlist: data[i][j].waitlist,
+                    current_enrolment: data[i][j].current_enrolment,
+                    max_enrolment: data[i][j].max_enrolment,
+                    building: data[i][j].building,
+                    instructor: data[i][j].instructor
                 });
             }
         }
@@ -1498,7 +1589,16 @@ function open_exclude() {
                 check_box.checked = !find_exclude_in_storage("exclude", course_data[i][j]);
                 check_box_label.style.marginBottom = "3%";
                 check_box_label.appendChild(check_box);
-                check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number + (course_data[i][j].waitlist != 0 ? " → Waitlist: " + course_data[i][j].waitlist : "")));
+
+                if(JSON.parse(course_data[i][j].waitlist) == 0 && JSON.parse(course_data[i][j].current_enrolment == course_data[i][j].max_enrolment)) {
+                    check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number + " → Section Full"));
+                }
+                else if(JSON.parse(course_data[i][j].waitlist) != 0) {
+                    check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number + " → Waitlist: " + course_data[i][j].waitlist));
+                }
+                else {
+                    check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number));
+                }
                 list.appendChild(check_box_label);
 
                 pop_up_results.appendChild(list);
@@ -1723,6 +1823,12 @@ const preference_list = [
     "Start Time",
     "End Time"
 ]
+const description_table_list = [
+    "Time",
+    "Location",
+    "Instructor",
+    "Space Availability"
+];
 
 const baseUrl = "http://localhost:3000/";
 
