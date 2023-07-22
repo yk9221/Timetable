@@ -692,7 +692,12 @@ function multiple_schedules() {
     const right_click = function() {
         if(overview_start + table_height * table_width <= schedule.length) {
             overview_start += table_height * table_width;
-            generate_tables(table_in_table)
+            generate_tables(table_in_table);
+
+            if(table_in_table.innerHTML.includes("<tr></tr>")) {
+                overview_start = 0;
+                generate_tables(table_in_table);
+            }
         }
         else {
             overview_start = 0;
@@ -1838,8 +1843,8 @@ let saved_count = 0;
 let total_permutations = 0;
 let overview_start = 0;
 let last_schedule = false;
-const table_height = 2;
-const table_width = 7;
+const table_height = 1;
+const table_width = 5;
 const max_hours_per_day = 12;
 const all_courses = new Array();
 const counter = new Array();
