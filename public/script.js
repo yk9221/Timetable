@@ -1211,6 +1211,28 @@ function course_search() {
     });
 }
 
+function local_storage_reset() {
+        localStorage.setItem("faculty", JSON.stringify(new Array(
+            faculty_list[0],
+            faculty_list[1]
+        )));
+        localStorage.setItem("session", JSON.stringify(new Array(
+            session_list[0],
+            session_list[2]
+        )));
+        localStorage.setItem("start_time", 9);
+        localStorage.setItem("end_time", 21);
+}
+
+function init_local_storage() {
+    if(!localStorage.getItem("loaded")) {
+        localStorage.setItem("loaded", "true");
+    }
+    if(localStorage.getItem("loaded") == "true") {
+        local_storage_reset();
+    }
+}
+
 function clear_local_storage() {
     const clear_storage = document.querySelector(".clear_storage");
     const course_list = document.querySelector(".course_list");
@@ -1222,16 +1244,7 @@ function clear_local_storage() {
     clear_storage.addEventListener("click", function() {
         localStorage.clear();
         course_list.innerHTML = "";
-        localStorage.setItem("faculty", JSON.stringify(new Array(
-            faculty_list[0],
-            faculty_list[1]
-        )));
-        localStorage.setItem("session", JSON.stringify(new Array(
-            session_list[0],
-            session_list[2]
-        )));
-        localStorage.setItem("start_time", 9);
-        localStorage.setItem("end_time", 21);
+        local_storage_reset();
     });
 }
 
@@ -1771,6 +1784,8 @@ function main() {
     multiple_schedules();
 
     clear_local_storage();
+    init_local_storage();
+    
     course_search();
     add_previous_elements();
     schedule_click();
