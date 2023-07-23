@@ -601,8 +601,10 @@ function print_zoomed_schedule(number) {
     const close_table = document.querySelector(".close_table");
     const saved_icon = document.querySelector(".saved_icon");
     const saved = JSON.parse(localStorage.getItem("saved"));
+    const overview_prev = document.querySelector(".overview_prev");
+    const overview_next = document.querySelector(".overview_next");
 
-    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table || !saved_icon) {
+    if(!schedule_zoom || !clicked_schedule || !overview_table || !overview_table_caption || !close_table || !saved_icon || !overview_prev || !overview_next) {
         return;
     }
 
@@ -615,7 +617,6 @@ function print_zoomed_schedule(number) {
         }
     }
 
-
     schedule_zoom.style.display = "flex";
 
     print_on_table(schedule[number], overview_table);
@@ -623,10 +624,14 @@ function print_zoomed_schedule(number) {
 
     close_table.addEventListener("click", function() {
         schedule_zoom.style.display = "none";
+        overview_prev.style.visibility = "visible";
+        overview_next.style.visibility = "visible";
     });
     window.addEventListener("keydown", function(event) {
         if(event.key == "Escape") {
             schedule_zoom.style.display = "none";
+            overview_prev.style.visibility = "visible";
+            overview_next.style.visibility = "visible";
         }
     });
 }
@@ -667,6 +672,12 @@ function generate_tables(table_in_table) {
             }
 
             inner_table.addEventListener("click", function() {
+                const overview_prev = document.querySelector(".overview_prev");
+                const overview_next = document.querySelector(".overview_next");
+                
+                overview_prev.style.visibility = "hidden";
+                overview_next.style.visibility = "hidden";
+
                 print_zoomed_schedule(overview_start + i * table_width + j);
             });
 
@@ -724,18 +735,61 @@ function multiple_schedules() {
     const overview_save_button = document.querySelector(".overview_save_button");
     const overview_table_caption = document.querySelector(".overview_table_caption");
     const course_view = document.querySelector(".course_view");
+    const schedule_zoom = document.querySelector(".schedule_zoom");
+
     
-    if(!table_in_table || !overview_prev || !overview_next || !overview_save_button || !overview_table_caption || !course_view) {
+    if(!table_in_table || !overview_prev || !overview_next || !overview_save_button || !overview_table_caption || !course_view || !schedule_zoom) {
         return;
     }
 
     const left_click = function() {
+        if(schedule_zoom.style.display == "flex") {
+            const index = parseInt(overview_table_caption.innerHTML.substring(overview_table_caption.innerHTML.indexOf(" ") + 1, overview_table_caption.innerHTML.length)) - 1;
+            if((index) % (table_height * table_width) != 0) {
+                print_zoomed_schedule(index - 1);
+            }
+            else {
+                if(index == 0) {
+                    return;
+                }
+                overview_start -= table_height * table_width;
+                generate_tables(table_in_table);
+                print_zoomed_schedule(index - 1);
+            }
+            return;
+        }
+
         if(overview_start >= table_height * table_width) {
             overview_start -= table_height * table_width;
             generate_tables(table_in_table);
         }
     }
     const right_click = function() {
+        if(schedule_zoom.style.display == "flex") {
+            let index = parseInt(overview_table_caption.innerHTML.substring(overview_table_caption.innerHTML.indexOf(" ") + 1, overview_table_caption.innerHTML.length)) - 1;
+            if((index + 1) % (table_height * table_width) != 0) {
+                if(!table_in_table.querySelector("table").rows[parseInt(((index+1) % (table_height * table_width)) / table_width)].cells[((index+1) % (table_height * table_width)) % table_width]) {
+                    overview_start = 0;
+                    index = -1;
+                    generate_tables(table_in_table);
+                }
+                print_zoomed_schedule(index + 1);
+            }
+            else {
+                overview_start += table_height * table_width;
+                generate_tables(table_in_table);
+
+                if(table_in_table.innerHTML.includes("<tr></tr>")) {
+                    overview_start = 0;
+                    generate_tables(table_in_table);
+                    index = -1;
+                }
+
+                print_zoomed_schedule(index + 1);
+            }
+            return;
+        }
+
         if(overview_start + table_height * table_width <= schedule.length) {
             overview_start += table_height * table_width;
             generate_tables(table_in_table);
