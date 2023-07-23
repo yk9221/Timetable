@@ -1222,13 +1222,15 @@ function local_storage_reset() {
         )));
         localStorage.setItem("start_time", 9);
         localStorage.setItem("end_time", 21);
+
+        localStorage.setItem("loaded", "true");
 }
 
 function init_local_storage() {
     if(!localStorage.getItem("loaded")) {
         localStorage.setItem("loaded", "true");
     }
-    if(localStorage.getItem("loaded") == "true") {
+    if(localStorage.getItem("loaded") != "true") {
         local_storage_reset();
     }
 }
