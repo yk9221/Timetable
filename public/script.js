@@ -119,7 +119,7 @@ function create_schedule() {
         let input_count = 0;
 
         // initilize temporary schedule array with 5 days and 12 hours per day
-        for(let j = 0; j < days_of_week.size; ++j) {
+        for(let j = 0; j < days_of_week_map.size; ++j) {
             temp_schedule[j] = new Array(max_hours_per_day);
         }
 
@@ -137,7 +137,7 @@ function create_schedule() {
                         for(let m = 0; m < time[l].duration && !conflict; ++m) {
 
                             // if the time slot is empty then add it to the schedule
-                            if(!temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m]) {
+                            if(!temp_schedule[days_of_week_map.get(time[l].day)][time[l].start_time - first_hour + m]) {
                                 const preference_start_time = JSON.parse(localStorage.getItem("start_time"));
                                 const preference_end_time = JSON.parse(localStorage.getItem("end_time"));
 
@@ -145,7 +145,7 @@ function create_schedule() {
                                     conflict = true;
                                 }
 
-                                temp_schedule[days_of_week.get(time[l].day)][time[l].start_time - 9 + m] = course;
+                                temp_schedule[days_of_week_map.get(time[l].day)][time[l].start_time - first_hour + m] = course;
                                 input_count++;
                             }
                             // otherwise raise the conflict flag
@@ -216,37 +216,93 @@ function print_all_schedules() {
     create_schedule();
 }
 
-function print_schedule(schedule) {
+function print_schedule(current_schedule) {
     const table = document.querySelector(".table");
 
-    if(!table || !schedule) {
+    if(!table || !current_schedule) {
         return;
     }
 
-    print_on_table(schedule, table);
+    print_on_table(current_schedule, table);
 }
 
-function print_on_table(schedule, table) {
-    let insert_count = 0;
+function print_on_table(current_schedule, table) {
+    remove_previous_table(table);
+    create_table(current_schedule, table);
+}
 
-    for(let i = 0; i < schedule.length; ++i) {
-        for(let j = 0; j < schedule[i].length; ++j) {
-            if(schedule[i][j]) {
-                table.rows[j + 1].cells[i + 1].innerHTML = "<b>" + schedule[i][j].course_code + "</b>" + "<br>" + schedule[i][j].section.section_type + schedule[i][j].section.section_num;
-                
-                if(!colors.get(course_code_map.get(schedule[i][j].course_code))) {
-                    course_code_map.set(schedule[i][j].course_code, course_code_map.size);
-                    insert_count++;
-                }
-
-                table.rows[j + 1].cells[i + 1].style.backgroundColor = colors.get(course_code_map.get(schedule[i][j].course_code));
-            }
-            else {
-                table.rows[j + 1].cells[i + 1].innerHTML = "";
-                table.rows[j + 1].cells[i + 1].style.backgroundColor = "white";
-            }
+function print_blank_table(table, caption) {
+    for(let i = 0; i < days_of_week_map.size; ++i) {
+        for(let j = 0; j < max_hours_per_day; ++j) {
+            table.rows[j + 1].cells[i + 1].innerHTML = "";
+            table.rows[j + 1].cells[i + 1].style.backgroundColor = "white";
         }
     }
+    caption.innerHTML = "No saved timetables";
+}
+
+function remove_previous_table(table) {
+    const caption = table.querySelector("caption");
+    table.innerHTML = "";
+    table.appendChild(caption);
+}
+
+function create_table(current_schedule, table) {
+    const thead = document.createElement("thead");
+    const tbody = document.createElement("tbody");
+    let insert_count = 0;
+
+    const tr_head = document.createElement("tr");
+    for(let i = 0; i < days_of_week_map.size + 1; ++i) {
+        const th = document.createElement("th");
+        if(i != 0) {
+            th.appendChild(document.createTextNode(days_of_week_list[i - 1]));
+        }
+        tr_head.appendChild(th);
+    }
+    thead.appendChild(tr_head);
+
+    for(let i = 0; i < max_hours_per_day; ++i) {
+        const tr_body = document.createElement("tr");
+
+        for(let j = 0; j < days_of_week_map.size + 1; ++j) {
+            if(j == 0) {
+                const th = document.createElement("th");
+                th.appendChild(document.createTextNode(convert_am_pm(i + first_hour) + " - " + convert_am_pm(i + first_hour + 1)));
+                tr_body.appendChild(th);
+            }
+            else {
+                if(current_schedule[j - 1][i]) {
+                    for(let k = 0; k < current_schedule[j-1][i].section.section_times.length; ++k) {
+                        const times = current_schedule[j - 1][i].section.section_times[k];
+                        if(times.day == days_of_week_list[j - 1] && times.start_time == i + first_hour) {
+                            const td = document.createElement("td");
+                            td.rowSpan = times.duration;
+                            td.innerHTML += "<b>" + current_schedule[j - 1][i].course_code + "</b>" + "<br>" + current_schedule[j - 1][i].section.section_type + current_schedule[j - 1][i].section.section_num;
+                            
+                            if(!colors.get(course_code_map.get(current_schedule[j - 1][i].course_code))) {
+                                course_code_map.set(current_schedule[j - 1][i].course_code, course_code_map.size);
+                                insert_count++;
+                            }
+                            
+                            td.style.backgroundColor = colors.get(course_code_map.get(current_schedule[j - 1][i].course_code));
+                            tr_body.appendChild(td);
+                        }
+                    }
+                }
+                else {
+                    const td = document.createElement("td");
+                    td.innerHTML = "";
+                    td.style.backgroundColor = "white";
+                    tr_body.appendChild(td);
+                }
+            }
+        }
+        tbody.appendChild(tr_body);
+    }
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
 
     const initial_length = course_code_map.size;
     for(let [key, value] of course_code_map.entries()) {
@@ -256,16 +312,6 @@ function print_on_table(schedule, table) {
             }
         }
     }
-}
-
-function print_blank_table(table, caption) {
-    for(let i = 0; i < days_of_week.size; ++i) {
-        for(let j = 0; j < max_hours_per_day; ++j) {
-            table.rows[j + 1].cells[i + 1].innerHTML = "";
-            table.rows[j + 1].cells[i + 1].style.backgroundColor = "white";
-        }
-    }
-    caption.innerHTML = "No saved timetables";
 }
 
 function next_schedule(caption) {
@@ -613,7 +659,7 @@ function generate_tables(table_in_table) {
 
             for(let k = 0; k < max_hours_per_day; ++k) {
                 const inner_tr = document.createElement("tr");
-                for(let l = 0; l < days_of_week.size; ++l) {
+                for(let l = 0; l < days_of_week_map.size; ++l) {
                     const inner_td = document.createElement("td");
                     inner_tr.appendChild(inner_td);
                 }
@@ -625,7 +671,7 @@ function generate_tables(table_in_table) {
             });
 
             for(let k = 0; k < max_hours_per_day; ++k) {
-                for(let l = 0; l < days_of_week.size; ++l) {
+                for(let l = 0; l < days_of_week_map.size; ++l) {
                     if(schedule[overview_start + i * table_width + j][l][k]) {
                         inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[overview_start + i * table_width + j][l][k].course_code));
                     }
@@ -1222,8 +1268,8 @@ function local_storage_reset() {
             session_list[0],
             session_list[2]
         )));
-        localStorage.setItem("start_time", 9);
-        localStorage.setItem("end_time", 21);
+        localStorage.setItem("start_time", first_hour);
+        localStorage.setItem("end_time", last_hour);
 
         localStorage.setItem("loaded", true);
         localStorage.setItem("ignore_conflict", false);
@@ -1742,8 +1788,8 @@ function open_preference() {
         start_label.style.marginRight = "20%";
 
         start_time_slider.type = "range";
-        start_time_slider.min = 9;
-        start_time_slider.max = 20;
+        start_time_slider.min = first_hour;
+        start_time_slider.max = last_hour - 1;
         start_time_slider.value = JSON.parse(localStorage.getItem("start_time"));
 
         start_time_label.style.marginLeft = "2%";
@@ -1764,8 +1810,8 @@ function open_preference() {
         end_label.style.marginRight = "22.6%";
 
         end_time_slider.type = "range";
-        end_time_slider.min = 10;
-        end_time_slider.max = 21;
+        end_time_slider.min = first_hour + 1;
+        end_time_slider.max = last_hour;
         end_time_slider.value = JSON.parse(localStorage.getItem("end_time"));
 
         end_time_label.style.marginLeft = "2%";
@@ -1885,12 +1931,19 @@ const course_section_map = new Map([
     ["TUT", 1],
     ["PRA", 2]
 ]);
-const days_of_week = new Map([
-    ["Monday", 0],
-    ["Tuesday", 1],
-    ["Wednesday", 2],
-    ["Thursday", 3],
-    ["Friday", 4]
+const days_of_week_list = new Array(
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday"
+);
+const days_of_week_map = new Map([
+    [days_of_week_list[0], 0],
+    [days_of_week_list[1], 1],
+    [days_of_week_list[2], 2],
+    [days_of_week_list[3], 3],
+    [days_of_week_list[4], 4]
 ]);
 const colors = new Map([
     [0, "rgb(110, 77, 188)"], // purple
@@ -1900,13 +1953,13 @@ const colors = new Map([
     [4, "rgb(212,138,52)"], // yellow
     [5, "rgb(173, 216, 250)"], // blue
 ]);
-const faculty_list = [
+const faculty_list = new Array(
     "Faculty of Applied Science & Engineering",
     "Faculty of Arts and Science",
     "Faculty of Kinesiology and Physical Education",
     "Faculty of Music",
     "John H. Daniels Faculty of Architecture, Landscape, & Design"
-];
+);
 const faculty_list_map = new Map([
     [faculty_list[0], "APSC"],
     [faculty_list[1], "ARTSC"],
@@ -1914,26 +1967,26 @@ const faculty_list_map = new Map([
     [faculty_list[3], "MUSIC"],
     [faculty_list[4], "ARCLA"]
 ]);
-const session_list = [
+const session_list = new Array(
     "Fall 2023 (F)",
     "Winter 2024 (S)",
     "Fall-Winter 2023-2024 (Y)"
-];
+);
 const session_list_map = new Map([
     [session_list[0], "20239"],
     [session_list[1], "20241"],
     [session_list[2], "20239-20241"]
 ]);
-const preference_list = [
+const preference_list = new Array(
     "Start Time",
     "End Time"
-]
-const description_table_list = [
+);
+const description_table_list = new Array(
     "Time",
     "Location",
     "Instructor",
     "Space Availability"
-];
+);
 
 const baseUrl = "http://localhost:3000/";
 
@@ -1946,6 +1999,8 @@ let last_schedule = false;
 const table_height = 2;
 const table_width = 7;
 const max_hours_per_day = 12;
+const first_hour = 9;
+const last_hour = 21;
 const all_courses = new Array();
 const counter = new Array();
 const schedule = new Array();
