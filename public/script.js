@@ -1472,6 +1472,49 @@ function sort_course_data(data) {
     return sorted_data;
 }
 
+function check_section_exclude(course_data, course_index, section_index) {
+    let section_count = 0;
+    let exclude_count = 0;
+    const selected_teach_method = course_data[course_index][section_index].teach_method;
+    const selected_course_code = course_data[course_index][section_index].course_code
+    const excluded_data = JSON.parse(localStorage.getItem("exclude"));
+
+    if(!excluded_data) {
+        return true;
+    }
+    
+    for(let i = 0; i < course_data[course_index].length; ++i) {
+        if(selected_teach_method == course_data[course_index][i].teach_method) {
+            section_count++;
+        }
+    }
+
+    for(let i = 0; i < excluded_data.length; ++i) {
+        if(selected_teach_method == excluded_data[i].teach_method &&
+            selected_course_code == excluded_data[i].course_code) {
+            exclude_count++;
+        }
+    }
+
+    if(exclude_count == section_count - 1) {
+        return false;
+    }
+    return true;
+
+}
+
+function convert_am_pm(time) {
+    if(parseInt(time) < 12) {
+        return time + "am";
+    }
+    else if(parseInt(time) == 12) {
+        return time + "pm";
+    }
+    else {
+        return (parseInt(time) - 12) + "pm";
+    }
+}
+
 function open_filter() {
     const filter = document.querySelector(".filter");
     const pop_up = document.querySelector(".pop_up");
@@ -1571,8 +1614,10 @@ function open_exclude() {
     const exclude = document.querySelector(".exclude");
     const pop_up = document.querySelector(".pop_up");
     const pop_up_results = document.querySelector(".pop_up_results");
+    const loading = document.querySelector(".loading");
+    const searching_load_screen = document.querySelector(".searching_load_screen");
 
-    if(!exclude || !pop_up || !pop_up_results) {
+    if(!exclude || !pop_up || !pop_up_results || !loading || !searching_load_screen) {
         return;
     }
     
@@ -1621,6 +1666,19 @@ function open_exclude() {
 
                 pop_up_results.appendChild(list);
                 check_box.addEventListener("change", function() {
+                    if(!check_section_exclude(course_data, i, j) && !check_box.checked) {
+                        loading.style.display = "flex";
+                        searching_load_screen.innerHTML = "Cannot remove all sections";
+                        check_box.checked = true;
+
+                        setTimeout(function() {
+                            loading.style.display = "none";
+                            searching_load_screen.innerHTML = "";
+                        }, 1000);
+
+                        return;
+                    }
+
                     if(!check_box.checked) {
                         add_exclude_to_storage("exclude", course_data[i][j]);
                     }
@@ -1651,18 +1709,6 @@ function open_exclude() {
     exclude.addEventListener("mouseout", function() {
         exclude.style.color = "black";
     });
-}
-
-function convert_am_pm(time) {
-    if(parseInt(time) < 12) {
-        return time + "am";
-    }
-    else if(parseInt(time) == 12) {
-        return time + "pm";
-    }
-    else {
-        return (parseInt(time) - 12) + "pm";
-    }
 }
 
 function open_preference() {
@@ -1725,9 +1771,6 @@ function open_preference() {
         end_div.appendChild(end_time_slider);
         end_div.appendChild(end_time_label);
         pop_up_results.appendChild(end_div);
-
-
-
 
         start_time_slider.addEventListener("change", function() {
             start_time_label.innerHTML = convert_am_pm(start_time_slider.value);

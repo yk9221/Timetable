@@ -209,7 +209,12 @@
     margin-bottom: 3%;
 }
 
-.pop_up_results th, .pop_up_results td {
+.pop_up_results th {
+    border: 1px solid black;
+    background-color: lightgray;
+}
+
+.pop_up_results td {
     border: 1px solid black;
 }
 
