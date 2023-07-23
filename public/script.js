@@ -971,7 +971,9 @@ function parse_description(description) {
         if(description[i] == "." && i != description.length - 1) {
             const left = description.substring(0, i + 2);
             const right = description.substring(i + 3);
-            description = left + description[i + 2].toUpperCase() + right;
+            if(description[i + 2]) {
+                description = left + description[i + 2].toUpperCase() + right;
+            }
         }
     }
 
@@ -1223,14 +1225,15 @@ function local_storage_reset() {
         localStorage.setItem("start_time", 9);
         localStorage.setItem("end_time", 21);
 
-        localStorage.setItem("loaded", "true");
+        localStorage.setItem("loaded", true);
+        localStorage.setItem("ignore_conflict", false);
 }
 
 function init_local_storage() {
     if(!localStorage.getItem("loaded")) {
-        localStorage.setItem("loaded", "true");
+        localStorage.setItem("loaded", true);
     }
-    if(localStorage.getItem("loaded") != "true") {
+    if(JSON.parse(localStorage.getItem("loaded")) != true) {
         local_storage_reset();
     }
 }
@@ -1773,6 +1776,43 @@ function open_preference() {
         end_div.appendChild(end_time_slider);
         end_div.appendChild(end_time_label);
         pop_up_results.appendChild(end_div);
+
+        const conflict_label = document.createElement("label");
+        const conflict_confirm_label = document.createElement("label");
+        const conflict_checkbox = document.createElement("input");
+        const conflict_div = document.createElement("div");
+
+        conflict_checkbox.type = "checkbox";
+        conflict_label.style.fontWeight = "bold";
+        conflict_label.style.marginRight = "8%";
+        conflict_confirm_label.style.marginLeft = "10%";
+
+        conflict_label.appendChild(document.createTextNode("Ignore Tutorial Conflicts"));
+
+        if(JSON.parse(localStorage.getItem("ignore_conflict"))) {
+            conflict_confirm_label.appendChild(document.createTextNode("Yes"));
+            conflict_checkbox.checked = true;
+        }
+        else {
+            conflict_confirm_label.appendChild(document.createTextNode("No"));
+            conflict_checkbox.checked = false;
+        }
+;
+        conflict_div.appendChild(conflict_label);
+        conflict_div.appendChild(conflict_checkbox);
+        conflict_div.appendChild(conflict_confirm_label);
+        pop_up_results.appendChild(conflict_div);
+
+        conflict_checkbox.addEventListener("change", function() {
+            if(conflict_checkbox.checked) {
+                conflict_confirm_label.innerHTML = "Yes";
+                localStorage.setItem("ignore_conflict", true);
+            }
+            else {
+                conflict_confirm_label.innerHTML = "No";
+                localStorage.setItem("ignore_conflict", false);
+            }
+        })
 
         start_time_slider.addEventListener("change", function() {
             start_time_label.innerHTML = convert_am_pm(start_time_slider.value);
