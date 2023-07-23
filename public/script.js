@@ -232,12 +232,11 @@ function print_on_table(current_schedule, table) {
 }
 
 function print_blank_table(table, caption) {
-    for(let i = 0; i < days_of_week_map.size; ++i) {
-        for(let j = 0; j < max_hours_per_day; ++j) {
-            table.rows[j + 1].cells[i + 1].innerHTML = "";
-            table.rows[j + 1].cells[i + 1].style.backgroundColor = "white";
-        }
+    const current_schedule = new Array(days_of_week_map.size);
+    for(let i = 0; i < current_schedule.length; ++i) {
+        current_schedule[i] = new Array(max_hours_per_day);
     }
+    print_on_table(current_schedule, table);
     caption.innerHTML = "No saved timetables";
 }
 
@@ -547,6 +546,7 @@ function print_saved_schedules() {
     const saved_schedules = JSON.parse(localStorage.getItem("saved"));
 
     if(saved_schedules.length == 0) {
+        print_blank_table(saved_table, saved_table_caption);
         return;
     }
 
