@@ -1427,6 +1427,14 @@ function add_new_element(course_name, course_term) {
     item.addEventListener("click", function(){
         press_course_list(item);
     });
+    // change color when the mouse hovers over the course list
+    item.addEventListener("mouseover", function(){
+        item.style.color = "blue";
+        remove.style.color = "black";
+    });
+    item.addEventListener("mouseout", function(){
+        item.style.color = "black";
+    });
 }
 
 // add all the previous elements to the main page
@@ -1469,6 +1477,15 @@ function add_previous_elements() {
             item.addEventListener("click", function(){
                 press_course_list(item);
             });
+            // change color when the mouse hovers over the course list
+            item.addEventListener("mouseover", function(){
+                item.style.color = "blue";
+                remove.style.color = "black";
+            });
+            item.addEventListener("mouseout", function(){
+                item.style.color = "black";
+            });
+
         }
     }
 }
