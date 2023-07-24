@@ -242,7 +242,7 @@
 .searching_load_screen {
     width: 20%;
     height: 5%;
-    transform: translate(47%, -150%);
+    transform: translate(33%, -150%);
     background: white;
     padding: 20px;
     border-radius: 5px;
