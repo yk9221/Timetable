@@ -5,11 +5,14 @@ const port = 3000;
 app.use(express.static("public"));
 app.use(express.json());
 
+// api fetch with get
 app.get("/:dynamic", (req, res) => {
+    // get the course code, faculty and sessions
     let {key} = req.query;
     let {faculty} = req.query;
     let {session} = req.query;
 
+    // convert string to array
     if(!Array.isArray(faculty)) {
         faculty = new Array(faculty);
     }
@@ -17,24 +20,30 @@ app.get("/:dynamic", (req, res) => {
         session = new Array(session);
     }
 
+    // get the matches for the search
     const course_promise = get_matches(key, faculty, session);
     
     course_promise.then(result => {
+        // if the course was not found
         if(result.length == 0) {
             res.status(404).send(key + " not found");
         }
+        // if only one course was found
         else if(result.length == 1){
             let course_code = result[0].course_code;
             let course_name = result[0].course_name;
             let course_term = result[0].course_term;
             let course_description = result[0].course_description;
             
+            // get the course info
             const course_info = get_course_info(course_code, course_name, course_term, course_description, faculty, session);
 
             course_info.then(data => {
+                // return the course info
                 res.status(200).json(data);
             });
         }
+        // if multiple courses were found return the list of found courses
         else {
             res.status(200).send(result);
         }
@@ -42,6 +51,7 @@ app.get("/:dynamic", (req, res) => {
 
 });
 
+// get the matches
 async function get_matches(course, faculty, session) {
     let course_list;
 
