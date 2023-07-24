@@ -1,3 +1,4 @@
+// class that has course code and another class: section
 class Course {
     constructor(course_code, section) {
         this.course_code = course_code;
@@ -5,6 +6,7 @@ class Course {
     }
 };
 
+// class that has section type, section num and an array of section times
 class Section {
     constructor(section_type, section_num, section_times) {
         this.section_type = section_type;
@@ -12,6 +14,7 @@ class Section {
         this.section_times = this.parse_time(section_times);
     }
 
+    // parse section times into an array of objects
     parse_time(section_times) {
         const times = new Array();
         for(let i = 0; i < section_times.length; ++i) {
@@ -26,6 +29,7 @@ class Section {
     }
 };
 
+// class that has day, start time, end time and duration of each course
 class Time {
     constructor(day, start_time, end_time, duration) {
         this.day = day
@@ -35,6 +39,7 @@ class Time {
     }
 };
 
+// class that counts the current section type
 class LimitNode {
     constructor(limit) {
         this.count = 0;
@@ -42,21 +47,24 @@ class LimitNode {
     }
 };
 
+// given the course data, parse it using the classes defined above
 function parse_json() {
-    const arr = JSON.parse(localStorage.getItem("course_data"));
+    const course_data = JSON.parse(localStorage.getItem("course_data"));
     const exclude = JSON.parse(localStorage.getItem("exclude"));
     
-    if(!arr) {
+    if(!course_data) {
         return;
     }
 
-    for(let i = 0; i < arr.length; ++i) {
-        for(let j = 0; j < arr[i].length; ++j) {
-            const code = arr[i][j].course_code;
-            const type = arr[i][j].teach_method;
-            const num = arr[i][j].section_number;
-            const time = arr[i][j].time;
+    // loop through the course data
+    for(let i = 0; i < course_data.length; ++i) {
+        for(let j = 0; j < course_data[i].length; ++j) {
+            const code = course_data[i][j].course_code;
+            const type = course_data[i][j].teach_method;
+            const num = course_data[i][j].section_number;
+            const time = course_data[i][j].time;
 
+            // if the course has not been added
             if(!course_code_map.has(code)) {
                 all_courses[course_count] = new Array();
                 all_courses[course_count][course_section_map.get("LEC")] = new Array();
@@ -67,13 +75,12 @@ function parse_json() {
                 course_count++;
             }
 
+            // if the user specified to exclude a certain course section
             let remove = false;
             if(exclude) {
                 for(let k = 0; k < exclude.length; ++k) {
-                    if(exclude[k].course_code == code &&
-                        exclude[k].teach_method == type &&
-                        exclude[k].section_number == num) {
-                            remove = true;
+                    if(exclude[k].course_code == code && exclude[k].teach_method == type && exclude[k].section_number == num) {
+                        remove = true;
                     }
                 }
             }
@@ -85,32 +92,39 @@ function parse_json() {
     }
 }
 
+// create limit nodes
 function create_permutations() {
+    // loop through all courses
     for(let i = 0; i < all_courses.length; ++i) {
         for(let j = 0; j < all_courses[i].length; ++j) {
+            // get the number of sections for each course
             counter.push(new LimitNode(all_courses[i][j].length));
         }
     }
 }
 
+// create the schedule
 function create_schedule() {
     const next_button = document.querySelector(".next_course");
     const prev_button = document.querySelector(".previous_course");
     const table_in_table = document.querySelector(".table_in_table");
 
+    // if course list is empty then do not create schedule
     if((!next_button || !prev_button || all_courses.length == 0) && !table_in_table) {
         return;
     }
     
     // calculate the number of total permutations
-    total_permutations = permutations(counter);
+    total_permutations = permutations();
     
     // loop through all permutations
     for(let i = 0; i < total_permutations; ++i) {
+        // if the overview schedule page is open and the last schedule is currently being displayed
         if(table_in_table && (schedule.length >= overview_start + table_height * table_width) || last_schedule) {
             break;
         }
-        if(check_counter_reached(counter)) {
+        // if all permutations were looped through
+        if(check_counter_reached()) {
             last_schedule = true;
         }
 
@@ -141,6 +155,7 @@ function create_schedule() {
                                 const preference_start_time = JSON.parse(localStorage.getItem("start_time"));
                                 const preference_end_time = JSON.parse(localStorage.getItem("end_time"));
 
+                                // if the user defined a preferred time
                                 if(time[l].start_time < preference_start_time || time[l].start_time + time[l].duration > preference_end_time) {
                                     conflict = true;
                                 }
@@ -163,15 +178,17 @@ function create_schedule() {
             schedule.push(temp_schedule);
         }
         // go to the next possible permutation
-        add_one(counter);
+        add_one();
 
+        // if its the last schedule then break
         if(last_schedule) {
             break;
         }
     }
 }
 
-function check_counter_reached(counter) {
+// check if the counter has gone through all permutations
+function check_counter_reached() {
     for(let i = 0; i < counter.length; ++i) {
         if(counter[i].limit != 0 && counter[i].count != counter[i].limit - 1) {
             return false;
@@ -180,7 +197,8 @@ function check_counter_reached(counter) {
     return true;
 }
 
-function add_one(counter) {
+// add one to the counter
+function add_one() {
     for(let i = counter.length - 1; i >= 0; --i) {
         if(counter[i].count < counter[i].limit - 1) {
             counter[i].count++;
@@ -190,13 +208,15 @@ function add_one(counter) {
     }
 }
 
-function reset_after(counter, index) {
+// reset all the indexes before index
+function reset_after(index) {
     for(let i = index; i < counter.length; ++i) {
         counter[i].count = 0;
     }
 }
 
-function permutations(counter) {
+// calculate the total permutations
+function permutations() {
     let total = 1;
     for(let i = 0; i < counter.length; ++i) {
         if(counter[i].limit != 0) {
@@ -206,16 +226,26 @@ function permutations(counter) {
     return total;
 }
 
+// print the schedule on the generate schedule page
 function print_all_schedules() {
     const table = document.querySelector(".table");
+    const table_caption = document.querySelector(".table_caption");
 
-    if(!table) {
+    if(!table || !table_caption) {
         return;
     }
-
+    
+    // create the schedule
     create_schedule();
+
+    // if the schedule is not possible display an error message
+    if(schedule.length == 0) {
+        print_blank_table(table, table_caption, "No possible timetables");
+        return;
+    }
 }
 
+// print the schedule on the table
 function print_schedule(current_schedule) {
     const table = document.querySelector(".table");
 
@@ -226,26 +256,30 @@ function print_schedule(current_schedule) {
     print_on_table(current_schedule, table);
 }
 
+// remove the previous table then add a new table
 function print_on_table(current_schedule, table) {
     remove_previous_table(table);
     create_table(current_schedule, table);
 }
 
-function print_blank_table(table, caption) {
+// print an empty table
+function print_blank_table(table, caption, caption_text) {
     const current_schedule = new Array(days_of_week_map.size);
     for(let i = 0; i < current_schedule.length; ++i) {
         current_schedule[i] = new Array(max_hours_per_day);
     }
     print_on_table(current_schedule, table);
-    caption.innerHTML = "No saved timetables";
+    caption.innerHTML = caption_text;
 }
 
+// removes the previously created table except for the table caption
 function remove_previous_table(table) {
     const caption = table.querySelector("caption");
     table.innerHTML = "";
     table.appendChild(caption);
 }
 
+// create a new table that is customized from the schedule
 function create_table(current_schedule, table) {
     const thead = document.createElement("thead");
     const tbody = document.createElement("tbody");
@@ -313,6 +347,7 @@ function create_table(current_schedule, table) {
     }
 }
 
+// when the next schedule button is clicked
 function next_schedule(caption) {
     if(!caption) {
         return;
@@ -321,19 +356,23 @@ function next_schedule(caption) {
     const saved_icon = document.querySelector(".saved_icon");
     const saved = JSON.parse(localStorage.getItem("saved"));
 
+    // if the schedule length is 0
     if(schedule.length == 0) {
         caption.innerHTML = "No possible timetables";
         return;
     }
 
+    // add 1 to the possibility count to display the next schedule
     possibility_count++;
     if(possibility_count % (schedule.length + 1) == 0) {
         possibility_count++;
     }
 
+    // print the schedule with the caption
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 
+    // if the schedule was saved change the icon
     if(saved) {
         if(check_saved_exists(saved, schedule[possibility_count % (schedule.length + 1) - 1]) != -1) {
             saved_icon.setAttribute("src", "./icons/saved.png");
@@ -344,6 +383,7 @@ function next_schedule(caption) {
     }
 }
 
+// when the previous schedule button is clicked
 function previous_schedule(caption) {
     if(!caption) {
         return;
@@ -352,11 +392,13 @@ function previous_schedule(caption) {
     const saved_icon = document.querySelector(".saved_icon");
     const saved = JSON.parse(localStorage.getItem("saved"));
 
+    // if the schedule length is 0
     if(schedule.length == 0) {
         caption.innerHTML = "No possible timetables";
         return;
     }
 
+    // subtract 1 to the possibility count to display the next schedule
     possibility_count--;
     if(possibility_count % (schedule.length + 1) == 0) {
         possibility_count--;
@@ -365,9 +407,11 @@ function previous_schedule(caption) {
         possibility_count += schedule.length + 1;
     }
 
+    // print the schedule with the caption
     print_schedule(schedule[possibility_count % (schedule.length + 1) - 1]);
     caption.innerHTML = "Timetable " + (possibility_count % (schedule.length + 1)) + "/" + schedule.length;
 
+    // if the schedule was saved change the icon
     if(check_saved_exists(saved, schedule[possibility_count % (schedule.length + 1) - 1]) != -1) {
         saved_icon.setAttribute("src", "./icons/saved.png");
     }
@@ -376,14 +420,19 @@ function previous_schedule(caption) {
     }
 }
 
+// check if the current schedule was already saved
 function check_saved_exists(saved_schedules, current_schedule) {
+    // if either of the current of saved schedules are undefined
     if(!current_schedule || !saved_schedules) {
         return -1;
     }
 
+    // if there are no saved schedules
     if(saved_schedules.length == 0) {
         return -1;
     }
+
+    // loop through all the saved schedules and check if there is a match
     for(let i = 0; i < saved_schedules.length; ++i) {
         let match = true;
         for(let j = 0; j < saved_schedules[i].length; ++j) {
@@ -400,15 +449,18 @@ function check_saved_exists(saved_schedules, current_schedule) {
                 }
             }
         }
+        // if there was a match, return the index of the match
         if(match) {
             return i;
         }
+        // if there was no match return -1
         else if(!match && i == saved_schedules.length - 1) {
             return -1;
         }
     }
 }
 
+// when the save button is pressed then save the current schedule
 function save_button_pressed(current_schedule) {
     if(!localStorage.getItem("saved")) {
         localStorage.setItem("saved", JSON.stringify(new Array()));
@@ -418,6 +470,7 @@ function save_button_pressed(current_schedule) {
     const saved_icon = document.querySelector(".saved_icon");
     const save_index = check_saved_exists(saved, current_schedule);
 
+    // change the icon of the save button
     if(save_index == -1) {
         saved.push(current_schedule);
         saved_icon.setAttribute("src", "./icons/saved.png");
@@ -426,9 +479,12 @@ function save_button_pressed(current_schedule) {
         saved.splice(save_index, 1);
         saved_icon.setAttribute("src", "./icons/not_saved.png");
     }
+
+    // save the schedule to the local storage
     localStorage.setItem("saved", JSON.stringify(saved));
 }
 
+// if a button is clicked on the generate schedule page
 function schedule_click() {
     const next_button = document.querySelector(".next_course");
     const prev_button = document.querySelector(".previous_course");
@@ -441,10 +497,19 @@ function schedule_click() {
         return;
     }
 
+    // if the saved button is pressed
     save_button.addEventListener("click", function() {
         const index = possibility_count % (schedule.length + 1) - 1;
         save_button_pressed(schedule[index], index);
     });
+    // if the enter key is pressed
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "Enter") {
+            const index = possibility_count % (schedule.length + 1) - 1;
+            save_button_pressed(schedule[index], index);
+        }
+    });
+    // change color when the mouse hovers over the save button
     save_button.addEventListener("mouseover", function(){
         save_button.style.backgroundColor = button_on_color;
     });
@@ -452,14 +517,17 @@ function schedule_click() {
         save_button.style.backgroundColor = button_background_color;
     });
 
+    // if the next button is pressed
     next_button.addEventListener("click", function() {
         next_schedule(caption);
     });
+    // if the right arrow key is pressed
     window.addEventListener("keydown", function(event) {
         if(event.key == "ArrowRight") {
             next_schedule(caption);
         }
     });
+    // change color when the mouse hovers over the next button
     next_button.addEventListener("mouseover", function(){
         next_button.style.backgroundColor = button_on_color;
     });
@@ -467,14 +535,17 @@ function schedule_click() {
         next_button.style.backgroundColor = button_background_color;
     });
 
+    // if the previous button is pressed
     prev_button.addEventListener("click", function() {
         previous_schedule(caption);
     });
+    // if the left arrow key is pressed
     window.addEventListener("keydown", function(event) {
         if(event.key == "ArrowLeft") {
             previous_schedule(caption);
         }
     });
+    // change color when the mouse hovers over the previous button
     prev_button.addEventListener("mouseover", function(){
         prev_button.style.backgroundColor = button_on_color;
     });
@@ -483,25 +554,30 @@ function schedule_click() {
     });
 }
 
+// if the next schedule button is pressed when saved schedule page is open
 function next_saved_schedule(saved_schedules, saved_table_caption, saved_table) {
     if(!saved_table_caption) {
         return;
     }
 
+    // go to the next saved schedule
     saved_count++;
     if(saved_count % (saved_schedules.length + 1) == 0) {
         saved_count++;
     }
 
+    // print the schedule on the table
     print_on_table(saved_schedules[saved_count % (saved_schedules.length + 1) - 1], saved_table);
     saved_table_caption.innerHTML = "Timetable " + (saved_count % (saved_schedules.length + 1)) + "/" + saved_schedules.length;
 }
 
+// if the previous schedule button is pressed when saved schedule page is open
 function previous_saved_schedule(saved_schedules, saved_table_caption, saved_table) {
     if(!saved_table_caption) {
         return;
     }
 
+    // go to the previous saved schedule
     saved_count--;
     if(saved_count % (saved_schedules.length + 1) == 0) {
         saved_count--;
@@ -510,28 +586,35 @@ function previous_saved_schedule(saved_schedules, saved_table_caption, saved_tab
         saved_count += saved_schedules.length + 1;
     }
 
+    // print the schedule on the table
     print_on_table(saved_schedules[saved_count % (saved_schedules.length + 1) - 1], saved_table);
     saved_table_caption.innerHTML = "Timetable " + (saved_count % (saved_schedules.length + 1)) + "/" + saved_schedules.length;
 }
 
+// delete schedule from saved list
 function delete_from_saved(saved_schedules, saved_table, saved_table_caption, index) {
+    // delete the schedule from all saved schedules
     saved_schedules.splice(index, 1);
     localStorage.setItem("saved", JSON.stringify(saved_schedules));
 
+    // if there are no more saved schedules
     if(saved_schedules.length == 0) {
-        print_blank_table(saved_table, saved_table_caption);
-
+        print_blank_table(saved_table, saved_table_caption, "No saved timetables");
         return;
     }
 
+    // if deleted schedule is the last one then return to the first schedule
     if(index == saved_schedules.length) {
         saved_count = 1;
     }
 
-    saved_table_caption.innerHTML = "Timetable " + saved_count % (saved_schedules.length + 1) + "/" + saved_schedules.length;
+
+    // print the schedule on the table
     print_on_table(saved_schedules[index % saved_schedules.length], saved_table);
+    saved_table_caption.innerHTML = "Timetable " + saved_count % (saved_schedules.length + 1) + "/" + saved_schedules.length;
 }
 
+// if a button is clicked on the saved schedule page
 function print_saved_schedules() {
     const saved_table = document.querySelector(".saved_table");
     const saved_table_caption = document.querySelector(".saved_table_caption");
@@ -539,27 +622,36 @@ function print_saved_schedules() {
     const saved_next_course = document.querySelector(".saved_next_course");
     const delete_saved_course = document.querySelector(".delete_saved_course");
 
-    if(!saved_table || !saved_table_caption || !saved_previous_course || !saved_next_course || !delete_saved_course || !localStorage.getItem("saved")) {
+    if(!saved_table || !saved_table_caption || !saved_previous_course || !saved_next_course || !delete_saved_course) {
+        return;
+    }
+    else if(!localStorage.getItem("saved")) {
+        print_blank_table(saved_table, saved_table_caption, "No saved timetables");
         return;
     }
 
     const saved_schedules = JSON.parse(localStorage.getItem("saved"));
 
+    // if there are no saved schedules
     if(saved_schedules.length == 0) {
-        print_blank_table(saved_table, saved_table_caption);
+        print_blank_table(saved_table, saved_table_caption, "No saved timetables");
         return;
     }
 
+    // print first saved schedule
     next_saved_schedule(saved_schedules, saved_table_caption, saved_table);
 
+    // if the next button is pressed
     saved_next_course.addEventListener("click", function() {
         next_saved_schedule(saved_schedules, saved_table_caption, saved_table);
     });
+    // if the right arrow key is pressed
     window.addEventListener("keydown", function(event) {
         if(event.key == "ArrowRight") {
             next_saved_schedule(saved_schedules, saved_table_caption, saved_table);
         }
     });
+    // change color when the mouse hovers over the next button
     saved_next_course.addEventListener("mouseover", function(){
         saved_next_course.style.backgroundColor = button_on_color;
     });
@@ -567,14 +659,17 @@ function print_saved_schedules() {
         saved_next_course.style.backgroundColor = button_background_color;
     });
 
+    // if the previous button is pressed
     saved_previous_course.addEventListener("click", function() {
         previous_saved_schedule(saved_schedules, saved_table_caption, saved_table);
     });
+    // if the left arrow key is pressed
     window.addEventListener("keydown", function(event) {
         if(event.key == "ArrowLeft") {
             previous_saved_schedule(saved_schedules, saved_table_caption, saved_table);
         }
     });
+    // change color when the mouse hovers over the previous button
     saved_previous_course.addEventListener("mouseover", function(){
         saved_previous_course.style.backgroundColor = button_on_color;
     });
@@ -582,9 +677,17 @@ function print_saved_schedules() {
         saved_previous_course.style.backgroundColor = button_background_color;
     });
 
+    // if the delete button is pressed
     delete_saved_course.addEventListener("click", function() {
         delete_from_saved(saved_schedules, saved_table, saved_table_caption, saved_count % (saved_schedules.length + 1) - 1);
     });
+    // if the backspace key is pressed
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "Backspace") {
+            delete_from_saved(saved_schedules, saved_table, saved_table_caption, saved_count % (saved_schedules.length + 1) - 1);
+        }
+    });
+    // change color when the mouse hovers over the delete button
     delete_saved_course.addEventListener("mouseover", function(){
         delete_saved_course.style.backgroundColor = button_on_color;
     });
@@ -593,6 +696,7 @@ function print_saved_schedules() {
     });
 }
 
+// if a button is clicked on the when the schedule is zoomed on the schedule overview page
 function print_zoomed_schedule(number) {
     const schedule_zoom = document.querySelector(".schedule_zoom");
     const clicked_schedule = document.querySelector(".clicked_schedule");
@@ -608,6 +712,7 @@ function print_zoomed_schedule(number) {
         return;
     }
 
+    // change icon of save button if already saved
     if(saved) {
         if(check_saved_exists(saved, schedule[number]) != -1) {
             saved_icon.setAttribute("src", "./icons/saved.png");
@@ -617,16 +722,20 @@ function print_zoomed_schedule(number) {
         }
     }
 
+    // make the schedule zoom popup visible
     schedule_zoom.style.display = "flex";
 
+    // print the schedule on the popup
     print_on_table(schedule[number], overview_table);
     overview_table_caption.innerHTML = "Timetable " + (number + 1);
 
+    // if the close button is pressed close the pop up
     close_table.addEventListener("click", function() {
         schedule_zoom.style.display = "none";
         overview_prev.style.visibility = "visible";
         overview_next.style.visibility = "visible";
     });
+    // if the escape key is pressed close the pop up
     window.addEventListener("keydown", function(event) {
         if(event.key == "Escape") {
             schedule_zoom.style.display = "none";
@@ -636,7 +745,9 @@ function print_zoomed_schedule(number) {
     });
 }
 
+// generate the small tables on the schedule overview page
 function generate_tables(table_in_table) {
+    // create the schedules for the current page
     create_schedule();
 
     table_in_table.innerHTML = "";
@@ -644,6 +755,7 @@ function generate_tables(table_in_table) {
 
     const outer_table = document.createElement("table");
     for(let i = 0; i < table_height; ++i) {
+        // stop printing tables if the schedule reached the end
         if(not_enough) {
             break;
         }
@@ -836,6 +948,14 @@ function multiple_schedules() {
         const caption = overview_table_caption.innerHTML;
         const index = caption.substring((caption.indexOf(" ") + 1), caption.length) - 1;
         save_button_pressed(schedule[index], index);
+    });
+    // if the enter key is pressed
+    window.addEventListener("keydown", function(event) {
+        if(event.key == "Enter") {
+            const caption = overview_table_caption.innerHTML;
+            const index = caption.substring((caption.indexOf(" ") + 1), caption.length) - 1;
+            save_button_pressed(schedule[index], index);
+        }
     });
     overview_save_button.addEventListener("mouseover", function(){
         overview_save_button.style.backgroundColor = button_on_color;
@@ -1116,6 +1236,7 @@ function press_course_list(item) {
     }
 
     pop_up.style.display = "flex";
+    pop_up.scrollTop = 0;
     pop_up_results.style.width = "70%";
     pop_up_results.style.height = "60%";
 
@@ -1314,19 +1435,22 @@ function course_search() {
 }
 
 function local_storage_reset() {
-        localStorage.setItem("faculty", JSON.stringify(new Array(
-            faculty_list[0],
-            faculty_list[1]
-        )));
-        localStorage.setItem("session", JSON.stringify(new Array(
-            session_list[0],
-            session_list[2]
-        )));
-        localStorage.setItem("start_time", first_hour);
-        localStorage.setItem("end_time", last_hour);
+    const current_month = new Date().getMonth() + 1;
 
-        localStorage.setItem("loaded", true);
-        localStorage.setItem("ignore_conflict", false);
+    localStorage.setItem("faculty", JSON.stringify(new Array(
+        faculty_list[0],
+        faculty_list[1]
+    )));
+    // if the current month is between may and october then set the session to fall otherwise set it to winter
+    localStorage.setItem("session", JSON.stringify(new Array(
+        session_list[(current_month > 4 && current_month < 11) ? 0 : 1],
+        session_list[2]
+    )));
+    localStorage.setItem("start_time", first_hour);
+    localStorage.setItem("end_time", last_hour);
+
+    localStorage.setItem("loaded", true);
+    localStorage.setItem("ignore_conflict", false);
 }
 
 function init_local_storage() {
@@ -1367,6 +1491,7 @@ function multiple_searches(results, search) {
     }
 
     pop_up.style.display = "flex";
+    pop_up.scrollTop = 0;
     loading.style.display = "none";
 
     searched.appendChild(document.createTextNode("Search results for " + search));
@@ -1469,10 +1594,12 @@ function find_filter_in_storage(type, element) {
     return false;
 }
 
+// add which sections to exclude to the local storage
 function add_exclude_to_storage(type, element) {
     add_filter_to_storage(type, element);
 }
 
+// remove which sections to exclude to the local storage
 function remove_exclude_to_storage(type, element) {
     if(!localStorage.getItem(type)) {
         return;
@@ -1514,13 +1641,16 @@ function find_exclude_in_storage(type, element) {
     return false;
 }
 
+// sort the course data in terms of section number and section type
 function sort_course_data(data) {
     const sorted_data = new Array();
+    // loop through the course data
     for(let i = 0; i < data.length; ++i) {
         const lec = new Array();
         const tut = new Array();
         const pra = new Array();
         for(let j = 0; j < data[i].length; ++j) {
+            // separate the lec into a new array
             if(data[i][j].teach_method == "LEC") {
                 lec.push({
                     course_code: data[i][j].course_code,
@@ -1536,6 +1666,7 @@ function sort_course_data(data) {
                     instructor: data[i][j].instructor
                 });
             }
+            // separate the tut into a new array
             else if(data[i][j].teach_method == "TUT") {
                 tut.push({
                     course_code: data[i][j].course_code,
@@ -1551,6 +1682,7 @@ function sort_course_data(data) {
                     instructor: data[i][j].instructor
                 });
             }
+            // separate the pra into a new array
             else if(data[i][j].teach_method == "PRA") {
                 pra.push({
                     course_code: data[i][j].course_code,
@@ -1567,13 +1699,16 @@ function sort_course_data(data) {
                 });
             }
         }
+        // sort the sections in order of the section number
         lec.sort((course1, course2) => course1.section_number - course2.section_number);
         tut.sort((course1, course2) => course1.section_number - course2.section_number);
         pra.sort((course1, course2) => course1.section_number - course2.section_number);
         
+        // push into the array in order of lec, tut then pra
         sorted_data[i] = lec.concat(tut, pra);
     }
 
+    // return the sorted data
     return sorted_data;
 }
 
@@ -1620,6 +1755,7 @@ function convert_am_pm(time) {
     }
 }
 
+// when the filter label is clicked
 function open_filter() {
     const filter = document.querySelector(".filter");
     const pop_up = document.querySelector(".pop_up");
@@ -1635,6 +1771,7 @@ function open_filter() {
         const close_filter = document.createElement("button");
 
         pop_up.style.display = "flex";
+        pop_up.scrollTop = 0;
 
         close_filter.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_filter);
@@ -1715,6 +1852,7 @@ function open_filter() {
     });
 }
 
+// when the exclude label is clicked
 function open_exclude() {
     const exclude = document.querySelector(".exclude");
     const pop_up = document.querySelector(".pop_up");
@@ -1735,6 +1873,7 @@ function open_exclude() {
         const course_data = sort_course_data(JSON.parse(localStorage.course_data));
 
         pop_up.style.display = "flex";
+        pop_up.scrollTop = 0;
 
         close_exclude.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_exclude);
@@ -1816,6 +1955,7 @@ function open_exclude() {
     });
 }
 
+// when the preference label is clicked
 function open_preference() {
     const preference = document.querySelector(".preference");
     const pop_up = document.querySelector(".pop_up");
@@ -1829,6 +1969,7 @@ function open_preference() {
         const close_preference = document.createElement("button");
 
         pop_up.style.display = "flex";
+        pop_up.scrollTop = 0;
 
         close_preference.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_preference);
@@ -1965,6 +2106,7 @@ function main() {
     create_permutations();
 
     print_all_schedules();
+    schedule_click();
     print_saved_schedules();
     multiple_schedules();
 
@@ -1973,7 +2115,6 @@ function main() {
     
     course_search();
     add_previous_elements();
-    schedule_click();
     open_filter();
     open_exclude();
     open_preference();
