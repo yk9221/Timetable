@@ -285,6 +285,7 @@ function create_table(current_schedule, table) {
     const tbody = document.createElement("tbody");
     let insert_count = 0;
 
+    // add the days of week to the table header
     const tr_head = document.createElement("tr");
     for(let i = 0; i < days_of_week_map.size + 1; ++i) {
         const th = document.createElement("th");
@@ -299,30 +300,38 @@ function create_table(current_schedule, table) {
         const tr_body = document.createElement("tr");
 
         for(let j = 0; j < days_of_week_map.size + 1; ++j) {
+            // add the time as a table header on the left
             if(j == 0) {
                 const th = document.createElement("th");
                 th.appendChild(document.createTextNode(convert_am_pm(i + first_hour) + " - " + convert_am_pm(i + first_hour + 1)));
                 tr_body.appendChild(th);
             }
             else {
+                // if there is a course at the time period
                 if(current_schedule[j - 1][i]) {
                     for(let k = 0; k < current_schedule[j-1][i].section.section_times.length; ++k) {
                         const times = current_schedule[j - 1][i].section.section_times[k];
+
+                        // only add the course at when the course starts
                         if(times.day == days_of_week_list[j - 1] && times.start_time == i + first_hour) {
+                            // create a table data and span it for the duration of the course
                             const td = document.createElement("td");
                             td.rowSpan = times.duration;
                             td.innerHTML += "<b>" + current_schedule[j - 1][i].course_code + "</b>" + "<br>" + current_schedule[j - 1][i].section.section_type + current_schedule[j - 1][i].section.section_num;
                             
+                            // if the course is not found in the course code
                             if(!colors.get(course_code_map.get(current_schedule[j - 1][i].course_code))) {
                                 course_code_map.set(current_schedule[j - 1][i].course_code, course_code_map.size);
                                 insert_count++;
                             }
                             
+                            // add the color to the course
                             td.style.backgroundColor = colors.get(course_code_map.get(current_schedule[j - 1][i].course_code));
                             tr_body.appendChild(td);
                         }
                     }
                 }
+                // if there are no courses at the time period
                 else {
                     const td = document.createElement("td");
                     td.innerHTML = "";
@@ -334,9 +343,11 @@ function create_table(current_schedule, table) {
         tbody.appendChild(tr_body);
     }
 
+    // append the table head and body to the table
     table.appendChild(thead);
     table.appendChild(tbody);
 
+    // remove the temporary added courses for coloring
     const initial_length = course_code_map.size;
     for(let [key, value] of course_code_map.entries()) {
         for(let i = 0; i < insert_count; ++i) {
@@ -844,6 +855,7 @@ function create_course_legend() {
     course_view.appendChild(color_list);
 }
 
+// when a button is clicked in the schedule overview page
 function multiple_schedules() {
     const table_in_table = document.querySelector(".table_in_table");
     const overview_prev = document.querySelector(".overview_prev");
@@ -858,13 +870,17 @@ function multiple_schedules() {
         return;
     }
 
+    // if the user wants to go the previous page
     const left_click = function() {
         if(schedule_zoom.style.display == "flex") {
+            // print the previous zoomed schedule
             const index = parseInt(overview_table_caption.innerHTML.substring(overview_table_caption.innerHTML.indexOf(" ") + 1, overview_table_caption.innerHTML.length)) - 1;
-            if((index) % (table_height * table_width) != 0) {
+            if(index % (table_height * table_width) != 0) {
                 print_zoomed_schedule(index - 1);
             }
+            // if there is a page change
             else {
+                // if on the first page
                 if(index == 0) {
                     return;
                 }
@@ -875,6 +891,7 @@ function multiple_schedules() {
             return;
         }
 
+        // if the user wants to make a previous page change
         if(overview_start >= table_height * table_width) {
             overview_start -= table_height * table_width;
             generate_tables(table_in_table);
@@ -882,6 +899,7 @@ function multiple_schedules() {
     }
     const right_click = function() {
         if(schedule_zoom.style.display == "flex") {
+            // print the next zoomed schedule
             let index = parseInt(overview_table_caption.innerHTML.substring(overview_table_caption.innerHTML.indexOf(" ") + 1, overview_table_caption.innerHTML.length)) - 1;
             if((index + 1) % (table_height * table_width) != 0) {
                 if(!table_in_table.querySelector("table").rows[parseInt(((index+1) % (table_height * table_width)) / table_width)].cells[((index+1) % (table_height * table_width)) % table_width]) {
@@ -891,10 +909,12 @@ function multiple_schedules() {
                 }
                 print_zoomed_schedule(index + 1);
             }
+            // if there is a page change
             else {
                 overview_start += table_height * table_width;
                 generate_tables(table_in_table);
 
+                // if end of last page reached
                 if(table_in_table.innerHTML.includes("<tr></tr>")) {
                     overview_start = 0;
                     generate_tables(table_in_table);
@@ -906,10 +926,12 @@ function multiple_schedules() {
             return;
         }
 
+        // if the user wants to make a next page change
         if(overview_start + table_height * table_width <= schedule.length) {
             overview_start += table_height * table_width;
             generate_tables(table_in_table);
 
+            // if end of last page reached
             if(table_in_table.innerHTML.includes("<tr></tr>")) {
                 overview_start = 0;
                 generate_tables(table_in_table);
@@ -921,12 +943,15 @@ function multiple_schedules() {
         }
     }
 
+    // if the left arrow key is pressed
     overview_prev.addEventListener("click", left_click);
     window.addEventListener("keydown", function(event) {
         if(event.key == "ArrowLeft") {
             left_click();
         }
     });
+
+    // if the right arrow key is pressed
     overview_next.addEventListener("click", right_click);
     window.addEventListener("keydown", function(event) {
         if(event.key == "ArrowRight") {
@@ -934,6 +959,7 @@ function multiple_schedules() {
         }
     });
 
+    // change color when the mouse hovers over the previous button
     overview_prev.addEventListener("mouseover", function(){
         overview_prev.style.backgroundColor = button_on_color;
     });
@@ -941,6 +967,7 @@ function multiple_schedules() {
         overview_prev.style.backgroundColor = button_background_color;
     });
 
+    // change color when the mouse hovers over the next button
     overview_next.addEventListener("mouseover", function(){
         overview_next.style.backgroundColor = button_on_color;
     });
@@ -948,6 +975,7 @@ function multiple_schedules() {
         overview_next.style.backgroundColor = button_background_color;
     });
 
+    // if the save button is clicked
     overview_save_button.addEventListener("click", function() {
         const caption = overview_table_caption.innerHTML;
         const index = caption.substring((caption.indexOf(" ") + 1), caption.length) - 1;
@@ -961,6 +989,7 @@ function multiple_schedules() {
             save_button_pressed(schedule[index], index);
         }
     });
+    // change color when the mouse hovers over the save button
     overview_save_button.addEventListener("mouseover", function(){
         overview_save_button.style.backgroundColor = button_on_color;
     });
@@ -968,9 +997,11 @@ function multiple_schedules() {
         overview_save_button.style.backgroundColor = button_background_color;
     });
 
+    // create the course legend and generate the tables
     create_course_legend();
     generate_tables(table_in_table);
 
+    // if there is no possible schedule then hide the buttons
     if(schedule.length == 0) {
         overview_prev.style.visibility = "hidden";
         overview_next.style.visibility = "hidden";
@@ -1217,6 +1248,7 @@ function parse_description(description) {
     return description;
 }
 
+// displays the course description with its info
 function press_course_list(item) {
     const course_data = sort_course_data(JSON.parse(localStorage.course_data));
     const pop_up = document.querySelector(".pop_up");
@@ -1357,6 +1389,7 @@ function press_course_list(item) {
         pop_up_results.appendChild(course_info_div);
     }
 
+    // if the escape key is pressed
     window.addEventListener("keydown", function(event) {
         if(event.key == "Escape") {
             pop_up.style.display = "none";
@@ -1366,6 +1399,7 @@ function press_course_list(item) {
         }
     });
 
+    // if the close button is clicked
     close.addEventListener("click", function() {
         pop_up.style.display = "none";
         pop_up_results.innerHTML = "";
@@ -1513,6 +1547,7 @@ function clear_local_storage() {
     });
 }
 
+// open pop up of search matches and get info of the selected course
 function multiple_searches(results, search) {
     const pop_up = document.querySelector(".pop_up");
     const pop_up_results = document.querySelector(".pop_up_results");
@@ -1526,6 +1561,7 @@ function multiple_searches(results, search) {
         return;
     }
 
+    // open pop up with search matches
     pop_up.style.display = "flex";
     pop_up.scrollTop = 0;
     loading.style.display = "none";
@@ -1537,6 +1573,7 @@ function multiple_searches(results, search) {
     close.appendChild(document.createTextNode("X"));
     pop_up_results.appendChild(close);
 
+    // close pop up when escape key is pressed
     window.addEventListener("keydown", function(event) {
         if(event.key == "Escape") {
             pop_up.style.display = "none";
@@ -1546,6 +1583,7 @@ function multiple_searches(results, search) {
         }
     });
 
+    // close pop up when close button is clicked
     close.addEventListener("click", function() {
         pop_up.style.display = "none";
         pop_up_results.innerHTML = "";
@@ -1553,23 +1591,29 @@ function multiple_searches(results, search) {
         search_text.focus();
     });
 
+    // loop through the results
     for(let i = 0; i < results.length; ++i) {
         const item = document.createElement("li");
         item.style.cursor = "pointer";
         
+        // add the item to the list of matches
         item.appendChild(document.createTextNode(results[i].course_code + " " + results[i].course_term + ": " + results[i].course_name));
         pop_up_results.appendChild(item);
 
+        // if a course was selected
         item.addEventListener("click", function() {
+            // get the course info of the selected course
             const selected_result = get_info_selected(results[i]);
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
             loading.style.display = "flex";
             searching_load_screen.innerHTML = "";
 
+            // add the selected course
             selected_result.then(result => {
                 add_course(result, results[i].course_code, results[i].course_term);
 
+                // close load message after 1 second
                 setTimeout(function() {
                     loading.style.display = "none";
                     searching_load_screen.innerHTML = "";
@@ -1580,10 +1624,10 @@ function multiple_searches(results, search) {
 
         });
 
+        // change color when the mouse hovers over the searched course list
         item.addEventListener("mouseover", function(){
             item.style.color = button_on_color;
         });
-
         item.addEventListener("mouseout", function(){
             item.style.color = "black";
         });
