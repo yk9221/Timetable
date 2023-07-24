@@ -1719,20 +1719,18 @@ function check_section_exclude(course_data, course_index, section_index) {
     const selected_course_code = course_data[course_index][section_index].course_code
     const excluded_data = JSON.parse(localStorage.getItem("exclude"));
 
-    if(!excluded_data) {
-        return true;
-    }
-    
     for(let i = 0; i < course_data[course_index].length; ++i) {
         if(selected_teach_method == course_data[course_index][i].teach_method) {
             section_count++;
         }
     }
 
-    for(let i = 0; i < excluded_data.length; ++i) {
-        if(selected_teach_method == excluded_data[i].teach_method &&
-            selected_course_code == excluded_data[i].course_code) {
-            exclude_count++;
+    if(excluded_data) {
+        for(let i = 0; i < excluded_data.length; ++i) {
+            if(selected_teach_method == excluded_data[i].teach_method &&
+                selected_course_code == excluded_data[i].course_code) {
+                exclude_count++;
+            }
         }
     }
 
