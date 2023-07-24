@@ -202,7 +202,7 @@ function add_one() {
     for(let i = counter.length - 1; i >= 0; --i) {
         if(counter[i].count < counter[i].limit - 1) {
             counter[i].count++;
-            reset_after(counter, i + 1);
+            reset_after(i + 1);
             break;
         }
     }
@@ -1216,7 +1216,6 @@ function parse_description(description) {
 
     return description;
 }
-
 
 function press_course_list(item) {
     const course_data = sort_course_data(JSON.parse(localStorage.course_data));

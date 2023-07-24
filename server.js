@@ -54,19 +54,21 @@ app.get("/:dynamic", (req, res) => {
 // get the matches
 async function get_matches(course, faculty, session) {
     let course_list;
-
     let url = "https://api.easi.utoronto.ca/ttb/getOptimizedMatchingCourseTitles?term=" + course;
 
+    // add the faculty to the url
     for(let i = 0; i < faculty.length; ++i) {
         url += "&divisions=" + faculty[i];
     }
 
+    // add the sessions to the url
     for(let i = 0; i < session.length; ++i) {
         url += "&sessions=" + session[i];
     }
 
     url += "&lowerThreshold=50&upperThreshold=200";
 
+    // send to uoft server
     await fetch(url)
     .then(response => response.text())
     .then(data => {
@@ -79,9 +81,11 @@ async function get_matches(course, faculty, session) {
     return course_list;
 }
 
+// get the course info
 async function get_course_info(course_code, course_name, course_term, course_description, faculty, session) {
     let course_info;
 
+    // send to uoft server
     await fetch("https://api.easi.utoronto.ca/ttb/getPageableCourses", {
         method: "POST",
         headers: {
@@ -119,15 +123,18 @@ async function get_course_info(course_code, course_name, course_term, course_des
         }
     })
     .then(data => {
+        // parse the course info
         course_info = parse_course_info(course_code, data, course_term, course_description);
     })
     .catch(error => {
         console.log("Error: ", error);
     });
 
+    // return the course info
     return course_info;
 }
 
+// parse the matches to the search
 function parse_matches(data) {
     const cheerio = require("cheerio");
 
@@ -142,6 +149,7 @@ function parse_matches(data) {
     const max_length = Math.max(code_elements.length, name_elements.length, section_elements.length, description_elements.length);
 
     for(let i = 0; i < max_length; ++i) {
+        // add the course description
         if(i < description_elements.length) {
             const description_element = full_html(description_elements[i]);
             const description_parent = description_element.parent();
@@ -153,6 +161,7 @@ function parse_matches(data) {
             }
         }
 
+        // add the course term
         if(i < section_elements.length) {
             const section_element = full_html(section_elements[i]);
             const section_parent = section_element.parent();
@@ -163,6 +172,7 @@ function parse_matches(data) {
             }
         }
 
+        // add the course name
         if(i < name_elements.length) {
             const name_element = full_html(name_elements[i]);
             const name_parent = name_element.parent();
@@ -172,6 +182,7 @@ function parse_matches(data) {
             }
         }
 
+        // add the course code
         if(i < code_elements.length) {
             const code_element = full_html(code_elements[i]);
             const code_parent = code_element.parent();
@@ -182,9 +193,11 @@ function parse_matches(data) {
         }
     }
 
+    // return the parsed course list
     return course_list;
 }
 
+// parse the course info
 function parse_course_info(course_code, data, course_term, course_description) {
     const cheerio = require("cheerio");
 
@@ -205,6 +218,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
         const section_element = full_html(section_elements[i]);
         const section_parent = section_element.parent();
 
+        // if the html parent is "sections"
         if(section_parent.get(0).tagName == "sections") {
             const part_html = cheerio.load(section_element.html());
             const teach_method = part_html("teachmethod");
@@ -219,6 +233,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
             const first_names = part_html("firstName");
             const last_names = part_html("lastName");
 
+            // parse the desired info
             course_info[i - 1] = {
                 course_code: course_code,
                 course_term: course_term,
@@ -233,6 +248,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
             course_info[i - 1]["building"] = new Array();
             course_info[i - 1]["instructor"] = new Array();
 
+            // parse the times for the course
             for(let j = 0; j < starts.length; ++j) {
                 const start = part_html(starts[j]);
                 const end = part_html(ends[j]);
@@ -248,6 +264,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
                     day: weekday_map.get(parseInt(day))
                 };
 
+                // if there are multiple of the same times
                 for(let k = 0; k < course_info[i - 1]["time"].length; ++k) {
                     if(JSON.stringify(course_info[i - 1]["time"][k]) == JSON.stringify(time_object)) {
                         same_time = true;
@@ -260,6 +277,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
                 course_info[i - 1]["building"].push(building_code.text() + " " + building_room_number.text());
             }
 
+            // parse the instructor info
             for(let j = 0; j < first_names.length; ++j) {
                 const first_name = part_html(first_names[j]);
                 const last_name = part_html(last_names[j]);
@@ -269,6 +287,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
         }
     }
 
+    // return the parsed course info
     return course_info;
 }
 
@@ -280,6 +299,7 @@ function convert_miliseconds(time) {
     return time / miliseconds_per_day * hours_per_day;
 }
 
+// api fetch with post
 app.post("/", (req, res) => {
     const course = req.body;
 
@@ -290,13 +310,17 @@ app.post("/", (req, res) => {
     const faculty = course.faculty;
     const session = course.session;
 
-    
+    // get course info
     const course_info = get_course_info(course_code, course_name, course_term, course_description, faculty, session);
 
     course_info.then(data => {
+        // return the course info
         res.status(200).json(data);
     });
 
 });
 
-app.listen(port, () => console.log("Connected at http://localhost:" + port));
+// open server
+app.listen(port, function() {
+    console.log("Connected at http://localhost:" + port)
+});
