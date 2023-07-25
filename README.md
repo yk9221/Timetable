@@ -10,7 +10,7 @@ Run these commands to install the required packages.
 - `npm i --save-dev nodemon`
 
 Once the packages were installed, run the server by typing the following.
--`npm run dev`
+- `npm run dev`
 
 # FrontEnd
 ## Main Page
