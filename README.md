@@ -25,15 +25,24 @@ The frontend is developed using a combination of JavaScript, HTML/CSS, while the
 ![Alt text](./images/CourseDescription.png)
 
 ## Generating Schedules
-- After adding the courses, the user can generate all the possible schedules.
+- After adding the courses, the user can generate all the possible schedules in the Generate Schedule tab.
 - The user can naviate through the courses by either clicking on the arrow buttons or pressing the arrow keys on the keyboard.
 - The user can also save their desired schedule for future viewing. Pressing the enter key is the keyboard shortcut for this action.
 ![Alt text](./images/GenerateSchedule.png)
 
 ## Checking Saved Schedules
-
+- If the user saved schedules, they can view it in the Saved Schedule tab.
+- Navigating is the same as above.
+- If the user wishes to delete a saved schedule from the list, they can simply press the trash bin icon or press the backspace key.
+![Alt text](./images/SavedSchedules.png)
 
 ## Overview of All Schedules
+- If the user wants a bigger overview of the generated schedules, they can view it in the Schedule Overview tab.
+- They can naviate through the schedules with the same method mentioned above.
+- This generates a number of schedules on the same page. The number of generated schedules can be modified in the preferences page.
+![Alt text](./images/ScheduleOverview.png)
+- To view each schedule in more detail, the user can click on the schedule.
+![Alt text](./images/ScheduleZoom.png)
 
 
 # BackEnd
