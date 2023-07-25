@@ -58,8 +58,14 @@ Once the packages were installed, run the server by typing the following.
 
 
 # BackEnd
+## Server
 - When the user inputs a course code, this sends a request to the server side.
 - The server side then gets a list of matching courses.
 - If there are multiple matching courses, the server will return the list of matching courses and when the user chooses the course they want, it will then send another request to the server side.
 - The server side will then parse the course information, which has course code, course time, course description, course instructors, etc.
 - If there was only one matching course, they server will parse the course information and return it.
+
+## Algorithm
+- The server sends the course times and then the algorithm goes through all combinations.
+- This may be especially slow if the course contains many tutorial and practical sections.
+- Schedule overview handles this problem since only the selected number of schedules are generated at each time.
