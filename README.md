@@ -19,6 +19,8 @@ The frontend is developed using a combination of JavaScript, HTML/CSS, while the
 - It will be displayed if the section is full or there is a waitlist.
 ![Alt text](./images/Excluding.png)
 ### Adding Preferences
+- The user can add preferences to the schedules, such as start/end time, number of schedules in schedule overview and whether they do not mind tutorial conflicts.
+![Alt text](./images/Preferences.png)
 ### Course Descriptions
 - If the user clicks on one of the courses from the course list, the course description will show up.
 - This includes an overview of the course and a detailed list of each course section.

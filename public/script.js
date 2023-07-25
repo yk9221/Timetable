@@ -873,11 +873,12 @@ function multiple_schedules() {
     const overview_table_caption = document.querySelector(".overview_table_caption");
     const course_view = document.querySelector(".course_view");
     const schedule_zoom = document.querySelector(".schedule_zoom");
-
     
     if(!table_in_table || !overview_prev || !overview_next || !overview_save_button || !overview_table_caption || !course_view || !schedule_zoom) {
         return;
     }
+
+    table_height = localStorage.getItem("table_height");
 
     // if the user wants to go the previous page
     const left_click = function() {
@@ -1558,9 +1559,10 @@ function local_storage_reset() {
     localStorage.setItem("start_time", first_hour);
     localStorage.setItem("end_time", last_hour);
 
-    // reset the loaded and ignore conflict
+    // reset the loaded, ignore conflict and table height
     localStorage.setItem("loaded", true);
     localStorage.setItem("ignore_conflict", false);
+    localStorage.setItem("table_height", 2);
 }
 
 // initialize the local storage
@@ -2195,6 +2197,39 @@ function open_preference() {
         end_div.appendChild(end_time_label);
         pop_up_results.appendChild(end_div);
 
+        // add the combobox for the number of schedules in schedule overview
+        const table_height_label = document.createElement("label");
+        const table_height_combobox = document.createElement("select");
+        const table_height_div = document.createElement("div");
+        const num_options = 10;
+
+        table_height_label.style.fontWeight = "bold";
+        table_height_label.style.marginRight = "8%";
+
+        table_height_label.appendChild(document.createTextNode("Number of schedule overview tables"));
+        table_height_div.appendChild(table_height_label);
+        table_height_div.appendChild(table_height_combobox);
+
+        // create the option for number of schedules in increments of 7
+        for(let i = 1; i <= num_options; ++i) {
+            const options = document.createElement("option");
+            options.value = i * table_width;
+
+            if(i == table_height) {
+                options.selected = true;
+            }
+
+            options.innerHTML = i * table_width;
+            table_height_combobox.appendChild(options);
+        }
+
+        // if the combobox state was changed
+        table_height_combobox.addEventListener("change", function() {
+            localStorage.setItem("table_height", parseInt(table_height_combobox.value / 7));
+        });
+
+        pop_up_results.appendChild(table_height_div);
+
         const conflict_label = document.createElement("label");
         const conflict_confirm_label = document.createElement("label");
         const conflict_checkbox = document.createElement("input");
@@ -2407,7 +2442,7 @@ let total_permutations = 0;
 let last_schedule = false;
 
 // overview table height
-const table_height = 2;
+let table_height = 2;
 // overview table width
 const table_width = 7;
 // maximum hours for courses per day
