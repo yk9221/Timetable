@@ -2,6 +2,16 @@
 
 The frontend is developed using a combination of JavaScript, HTML/CSS, while the backend is powered by Node.js.
 
+# Installations
+Run these commands to install the required packages.
+`npm init -y`
+`npm install express`
+`npm install cheerio`
+`npm i --save-dev nodemon`
+
+Once the packages were installed, run the server by typing the following.
+`npm run dev`
+
 # FrontEnd
 ## Main Page
 ![Alt text](./images/MainPage.png)
