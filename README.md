@@ -16,21 +16,24 @@ The frontend is developed using a combination of JavaScript, HTML/CSS, while the
 ![Alt text](./images/Filters.png)
 ### Excluding Sections
 - The user can exclude the sections they do not want to include.
+- It will be displayed if the section is full or there is a waitlist.
 ![Alt text](./images/Excluding.png)
 ### Adding Preferences
-### Clearing Results
 ### Course Descriptions
+- If the user clicks on one of the courses from the course list, the course description will show up.
+- This includes an overview of the course and a detailed list of each course section.
+![Alt text](./images/CourseDescription.png)
 
 ## Generating Schedules
-### Navigating Through All Schedules
-### Saving Schedules
+- After adding the courses, the user can generate all the possible schedules.
+- The user can naviate through the courses by either clicking on the arrow buttons or pressing the arrow keys on the keyboard.
+- The user can also save their desired schedule for future viewing. Pressing the enter key is the keyboard shortcut for this action.
+![Alt text](./images/GenerateSchedule.png)
 
 ## Checking Saved Schedules
-### Navigating Saved Schedules
-### Deleting Saved Schedules
+
 
 ## Overview of All Schedules
-### Navigating
-### Saving Schedules
+
 
 # BackEnd
