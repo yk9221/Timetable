@@ -48,3 +48,7 @@ The frontend is developed using a combination of JavaScript, HTML/CSS, while the
 
 
 # BackEnd
+- When the user inputs a course code, this sends a request to the server side.
+- The server side then gets a list of matching courses.
+- If there are multiple matching courses, the server will return the list of matching courses and when the user chooses the courese they want, it will then send another request to the server side.
+- The server side will then parse the course information, which has course code, course time, course description, course instructors, etc.
