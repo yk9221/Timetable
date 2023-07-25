@@ -771,6 +771,7 @@ function generate_tables(table_in_table) {
             break;
         }
 
+        // create the outer table row
         const outer_tr = document.createElement("tr");
         for(let j = 0; j < table_width; ++j) {
             if(schedule.length <= overview_start + i * table_width + j) {
@@ -778,13 +779,16 @@ function generate_tables(table_in_table) {
                 break;
             }
 
+            // create the outer table data that has an inner table inside
             const outer_td = document.createElement("td");
             const inner_table = document.createElement("table");
 
+            // create a caption with the timetable number and append it to the inner table
             const caption = document.createElement("caption");
             caption.appendChild(document.createTextNode("Timetable " + (overview_start + i * table_width + j + 1)));
             inner_table.appendChild(caption);
 
+            // create the inner table data and append it to the inner table
             for(let k = 0; k < max_hours_per_day; ++k) {
                 const inner_tr = document.createElement("tr");
                 for(let l = 0; l < days_of_week_map.size; ++l) {
@@ -794,6 +798,7 @@ function generate_tables(table_in_table) {
                 inner_table.appendChild(inner_tr);
             }
 
+            // if the inner table is clicked
             inner_table.addEventListener("click", function() {
                 const overview_prev = document.querySelector(".overview_prev");
                 const overview_next = document.querySelector(".overview_next");
@@ -801,14 +806,18 @@ function generate_tables(table_in_table) {
                 overview_prev.style.visibility = "hidden";
                 overview_next.style.visibility = "hidden";
 
+                // print the schedule with detailed information
                 print_zoomed_schedule(overview_start + i * table_width + j);
             });
 
+            // set the table data colors for the inner table
             for(let k = 0; k < max_hours_per_day; ++k) {
                 for(let l = 0; l < days_of_week_map.size; ++l) {
+                    // if there is a course then add a color
                     if(schedule[overview_start + i * table_width + j][l][k]) {
                         inner_table.rows[k].cells[l].style.backgroundColor = colors.get(course_code_map.get(schedule[overview_start + i * table_width + j][l][k].course_code));
                     }
+                    // otherwise make the color white
                     else {
                         inner_table.rows[k].cells[l].style.backgroundColor = "white";
                     }
@@ -983,7 +992,7 @@ function multiple_schedules() {
     });
     // if the enter key is pressed
     window.addEventListener("keydown", function(event) {
-        if(event.key == "Enter") {
+        if(event.key == "Enter" && schedule_zoom.style.display == "flex") {
             const caption = overview_table_caption.innerHTML;
             const index = caption.substring((caption.indexOf(" ") + 1), caption.length) - 1;
             save_button_pressed(schedule[index], index);
@@ -1268,6 +1277,7 @@ function press_course_list(item) {
         return;
     }
 
+    // get the course description from the course data
     for(let i = 0; i < course_data.length; ++i) {
         if(course_code == course_data[i][0].course_code) {
             course_description = course_data[i][0].course_description;
@@ -1275,37 +1285,45 @@ function press_course_list(item) {
         }
     }
 
+    // if there is no course description
     if(!course_description) {
         return;
     }
+    // else parse the course description
     else {
         course_description = parse_description(course_description);
     }
 
+    // make the popup visible
     pop_up.style.display = "flex";
     pop_up.scrollTop = 0;
     pop_up_results.style.width = "70%";
     pop_up_results.style.height = "60%";
 
+    // set the course label to the course code
     course_label.appendChild(document.createTextNode(item.innerHTML.substring(0, item.innerHTML.indexOf("<"))));
     course_label.style.fontWeight = "bold";
     course_label.style.fontSize = "30px";
     course_label_div.appendChild(course_label);
     pop_up_results.appendChild(course_label_div);
 
+    // add the course description to the pop up
     description_label.appendChild(document.createTextNode(course_description));
     description_label_div.appendChild(description_label)
     pop_up_results.appendChild(description_label_div);
 
+    // create the close button
     close.appendChild(document.createTextNode("X"));
     pop_up_results.appendChild(close);
 
+    // loop through the course data
     for(let i = 0; i < course_data[index].length; ++i) {
         const section = document.createElement("label");
         const table = document.createElement("table");
 
         table.style.border = "2px solid black";
 
+        // set the section label to the section type and number
         section.appendChild(document.createTextNode(course_data[index][i].teach_method + course_data[index][i].section_number));
         section.style.fontWeight = "bold";
         section.style.fontSize = "20px";
@@ -1314,12 +1332,14 @@ function press_course_list(item) {
         const tr_head = document.createElement("tr");
         const tr_body = document.createElement("tr");
 
+        // add the table headers in description table list
         for(let j = 0; j < description_table_list.length; ++j) {
             const th = document.createElement("th");
             th.appendChild(document.createTextNode(description_table_list[j]));
             tr_head.appendChild(th);
         }
 
+        // add the time for the section and append it to the table
         const time_list = document.createElement("ul");
         const time_td = document.createElement("td");
         for(let j = 0; j < course_data[index][i].time.length; ++j) {
@@ -1330,6 +1350,7 @@ function press_course_list(item) {
         time_td.appendChild(time_list);
         tr_body.appendChild(time_td);
 
+        // add the building codes for the section and append it to the table
         const building_list = document.createElement("ul");
         const building_td = document.createElement("td");
         for(let j = 0; j < course_data[index][i].building.length; ++j) {
@@ -1340,6 +1361,7 @@ function press_course_list(item) {
         building_td.appendChild(building_list);
         tr_body.appendChild(building_td);
 
+        // add the instructor list for the section and append it to the table
         const instructor_list = document.createElement("ul");
         const instructor_td = document.createElement("td");
         for(let j = 0; j < course_data[index][i].instructor.length; ++j) {
@@ -1347,6 +1369,7 @@ function press_course_list(item) {
             instructor.appendChild(document.createTextNode(course_data[index][i].instructor[j]));
             instructor_list.appendChild(instructor);
         }
+        // if there are no instructors display TBA
         if(course_data[index][i].instructor.length == 0) {
             const instructor = document.createElement("li");
             instructor.appendChild(document.createTextNode("TBA"));
@@ -1355,6 +1378,7 @@ function press_course_list(item) {
         instructor_td.appendChild(instructor_list);
         tr_body.appendChild(instructor_td);
 
+        // add how many seats are available for the course
         const space_list = document.createElement("ul");
         const space_td = document.createElement("td");
         const space = document.createElement("li");
@@ -1363,11 +1387,14 @@ function press_course_list(item) {
         const current_enrolment_num = JSON.parse(course_data[index][i].current_enrolment);
         const max_enrolment_num = JSON.parse(course_data[index][i].max_enrolment);
 
+        // if the max enrolment is reached
         if(current_enrolment_num == max_enrolment_num) {
+            // if the max enrolment is reached without a waitlist
             if(waitlist_num == 0) {
                 space.appendChild(document.createTextNode("Section Full"));
                 space_list.appendChild(space);
             }
+            // if there is a waitlist
             else {
                 const waitlist = document.createElement("li");
                 space.appendChild(document.createTextNode("Section Full"));
@@ -1376,6 +1403,7 @@ function press_course_list(item) {
                 space_list.appendChild(waitlist);
             }
         }
+        // if there is space to enrol
         else {
             space.appendChild(document.createTextNode((max_enrolment_num - current_enrolment_num) + " of " + max_enrolment_num + " available"));
             space_list.appendChild(space);
@@ -1875,26 +1903,32 @@ function open_filter() {
         return;
     }
     
+    // if the filter label is clicked
     filter.addEventListener("click", function() {
         const faculty_label = document.createElement("label");
         const session_label = document.createElement("label");
         const close_filter = document.createElement("button");
 
+        // make the pop up visible
         pop_up.style.display = "flex";
         pop_up.scrollTop = 0;
 
+        // create the close button
         close_filter.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_filter);
 
+        // add the faculty label
         faculty_label.appendChild(document.createTextNode("Faculty"));
         faculty_label.style.fontWeight = "bold";
         pop_up_results.appendChild(faculty_label);
 
+        // add all the possible faculties with a checkbox
         for(let i = 0; i < faculty_list.length; ++i) {
             const list = document.createElement("li");
             const check_box = document.createElement("input");
             const check_box_label = document.createElement("label");
 
+            // create checkbox and set its state
             check_box.type = "checkbox";
             check_box.checked = find_filter_in_storage("faculty", faculty_list[i]);
             check_box_label.appendChild(check_box);
@@ -1903,25 +1937,31 @@ function open_filter() {
 
             pop_up_results.appendChild(list);
 
+            // if the checkbox state was changed
             check_box.addEventListener("change", function() {
+                // if the checkbox was checked then add it to the faculty list
                 if(check_box.checked) {
                     add_filter_to_storage("faculty", faculty_list[i]);
                 }
+                // if the checkbox was unchecked then remove it from the faculty list
                 else {
                     remove_filter_from_storage("faculty", faculty_list[i]);
                 }
             });
         }
 
+        // add the session label
         session_label.appendChild(document.createTextNode("Session"));
         session_label.style.fontWeight = "bold";
         pop_up_results.appendChild(session_label);
 
+        // add all the possible sessions with a checkbox
         for(let i = 0; i < session_list.length; ++i) {
             const list = document.createElement("li");
             const check_box = document.createElement("input");
             const check_box_label = document.createElement("label");
 
+            // create checkbox and set its state
             check_box.type = "checkbox";
             check_box.checked = find_filter_in_storage("session", session_list[i]);
             check_box_label.appendChild(check_box);
@@ -1930,21 +1970,26 @@ function open_filter() {
 
             pop_up_results.appendChild(list);
 
+            // if the checkbox state was changed
             check_box.addEventListener("change", function() {
+                // if the checkbox was checked then add it to the session list
                 if(check_box.checked) {
                     add_filter_to_storage("session", session_list[i]);
                 }
+                // if the checkbox was unchecked then remove it from the session list
                 else {
                     remove_filter_from_storage("session", session_list[i]);
                 }
             });
         }
 
+        // if the close button is clicked
         close_filter.addEventListener("click", function() {
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
         });
 
+        // if the escape key is pressed
         window.addEventListener("keydown", function(event) {
             if(event.key == "Escape") {
                 pop_up.style.display = "none";
@@ -1953,10 +1998,10 @@ function open_filter() {
         });
     });
 
+    // change color when the mouse hovers over the filter label
     filter.addEventListener("mouseover", function() {
         filter.style.color = button_on_color;
     });
-
     filter.addEventListener("mouseout", function() {
         filter.style.color = "black";
     });
@@ -1974,22 +2019,28 @@ function open_exclude() {
         return;
     }
     
+    // if the exclude label is clicked
     exclude.addEventListener("click", function() {
         if(!localStorage.getItem("course_data") || JSON.parse(localStorage.getItem("course_data")).length == 0) {
             return;
         }
 
+        // sort the course data in terms of section number and type
         const close_exclude = document.createElement("button");
         const course_data = sort_course_data(JSON.parse(localStorage.course_data));
 
+        // make the pop up visible
         pop_up.style.display = "flex";
         pop_up.scrollTop = 0;
 
+        // create the close button
         close_exclude.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_exclude);
 
+        // go through the course data
         for(let i = 0; i < course_data.length; ++i) {
             for(let j = 0; j < course_data[i].length; ++j) {
+                // display the course code at the very start of each course
                 if(j == 0) {
                     const course_label = document.createElement("label");
                     course_label.style.fontWeight = "bold";
@@ -2002,24 +2053,31 @@ function open_exclude() {
                 const check_box = document.createElement("input");
                 const check_box_label = document.createElement("label");
 
+                // create a checkbox of section type and number
                 check_box.type = "checkbox";
                 check_box.checked = !find_exclude_in_storage("exclude", course_data[i][j]);
                 check_box_label.style.marginBottom = "3%";
                 check_box_label.appendChild(check_box);
 
+                // if there is no waitlist but the section is full
                 if(JSON.parse(course_data[i][j].waitlist) == 0 && JSON.parse(course_data[i][j].current_enrolment == course_data[i][j].max_enrolment)) {
                     check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number + " → Section Full"));
                 }
+                // if there is a waitlist
                 else if(JSON.parse(course_data[i][j].waitlist) != 0) {
                     check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number + " → Waitlist: " + course_data[i][j].waitlist));
                 }
+                // if there is no waitlist
                 else {
                     check_box_label.appendChild(document.createTextNode(course_data[i][j].teach_method + course_data[i][j].section_number));
                 }
                 list.appendChild(check_box_label);
 
                 pop_up_results.appendChild(list);
+
+                // if the checkbox state was changed
                 check_box.addEventListener("change", function() {
+                    // if the user tries to remove all of the same section type
                     if(!check_section_exclude(course_data, i, j) && !check_box.checked) {
                         loading.style.display = "flex";
                         searching_load_screen.innerHTML = "Cannot remove all sections";
@@ -2033,9 +2091,11 @@ function open_exclude() {
                         return;
                     }
 
+                    // if the checkbox was checked then add it to the exclude list
                     if(!check_box.checked) {
                         add_exclude_to_storage("exclude", course_data[i][j]);
                     }
+                    // if the checkbox was unchecked then remove it from the exclude list
                     else {
                         remove_exclude_to_storage("exclude", course_data[i][j]);
                     }
@@ -2043,11 +2103,13 @@ function open_exclude() {
             }
         }
 
+        // if the close button is clicked
         close_exclude.addEventListener("click", function() {
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
         });
         
+        // if the escape key is pressed
         window.addEventListener("keydown", function(event) {
             if(event.key == "Escape") {
                 pop_up.style.display = "none";
@@ -2056,10 +2118,10 @@ function open_exclude() {
         });
     });
 
+    // change color when the mouse hovers over the exclude label
     exclude.addEventListener("mouseover", function() {
         exclude.style.color = button_on_color;
     });
-
     exclude.addEventListener("mouseout", function() {
         exclude.style.color = "black";
     });
@@ -2075,12 +2137,15 @@ function open_preference() {
         return;
     }
     
+    // if the preference label is clicked
     preference.addEventListener("click", function() {
         const close_preference = document.createElement("button");
 
+        // make the pop up visible
         pop_up.style.display = "flex";
         pop_up.scrollTop = 0;
 
+        // create the close button
         close_preference.appendChild(document.createTextNode("X"));
         pop_up_results.appendChild(close_preference);
 
@@ -2092,6 +2157,7 @@ function open_preference() {
         start_label.style.fontWeight = "bold";
         start_label.style.marginRight = "20%";
 
+        // make the start time slider range from 9am to 8pm
         start_time_slider.type = "range";
         start_time_slider.min = first_hour;
         start_time_slider.max = last_hour - 1;
@@ -2114,6 +2180,7 @@ function open_preference() {
         end_label.style.fontWeight = "bold";
         end_label.style.marginRight = "22.6%";
 
+        // make the end time slider range from 10am to 9pm
         end_time_slider.type = "range";
         end_time_slider.min = first_hour + 1;
         end_time_slider.max = last_hour;
@@ -2133,6 +2200,7 @@ function open_preference() {
         const conflict_checkbox = document.createElement("input");
         const conflict_div = document.createElement("div");
 
+        // make the checkbox for tutorial conflicts
         conflict_checkbox.type = "checkbox";
         conflict_label.style.fontWeight = "bold";
         conflict_label.style.marginRight = "8%";
@@ -2140,35 +2208,43 @@ function open_preference() {
 
         conflict_label.appendChild(document.createTextNode("Ignore Tutorial Conflicts"));
 
+        // if ignore conflict is true
         if(JSON.parse(localStorage.getItem("ignore_conflict"))) {
             conflict_confirm_label.appendChild(document.createTextNode("Yes"));
             conflict_checkbox.checked = true;
         }
+        // if ignore conflict is false
         else {
             conflict_confirm_label.appendChild(document.createTextNode("No"));
             conflict_checkbox.checked = false;
         }
-;
+
         conflict_div.appendChild(conflict_label);
         conflict_div.appendChild(conflict_checkbox);
         conflict_div.appendChild(conflict_confirm_label);
         pop_up_results.appendChild(conflict_div);
 
+        // if the ignore conflict checkbox is changed
         conflict_checkbox.addEventListener("change", function() {
+            // set the ignore conflict boolean to true in the local storage
             if(conflict_checkbox.checked) {
                 conflict_confirm_label.innerHTML = "Yes";
                 localStorage.setItem("ignore_conflict", true);
             }
+            // set the ignore conflict boolean to false in the local storage
             else {
                 conflict_confirm_label.innerHTML = "No";
                 localStorage.setItem("ignore_conflict", false);
             }
         })
 
+        // if the start time slider is changed
         start_time_slider.addEventListener("change", function() {
             start_time_label.innerHTML = convert_am_pm(start_time_slider.value);
 
+            // if the end time value is smaller than the start time
             if(parseInt(end_time_slider.value) < parseInt(start_time_slider.value)) {
+                // set the end time slider equal to the start time
                 end_time_slider.value = start_time_slider.value;
                 end_time_label.innerHTML = convert_am_pm(end_time_slider.value);
 
@@ -2177,10 +2253,13 @@ function open_preference() {
             localStorage.setItem("start_time", start_time_slider.value);
         });
 
+        // if the end time slider is changed
         end_time_slider.addEventListener("change", function() {
             end_time_label.innerHTML = convert_am_pm(end_time_slider.value);
 
+            // if the start time value is smaller than the end time
             if(parseInt(end_time_slider.value) < parseInt(start_time_slider.value)) {
+                // set the start time slider equal to the end time
                 start_time_slider.value = end_time_slider.value;
                 start_time_label.innerHTML = convert_am_pm(start_time_slider.value);
 
@@ -2189,11 +2268,13 @@ function open_preference() {
             localStorage.setItem("end_time", end_time_slider.value);
         });
 
+        // if the close button is clicked
         close_preference.addEventListener("click", function() {
             pop_up.style.display = "none";
             pop_up_results.innerHTML = "";
         });
         
+        // if the escape key is pressed
         window.addEventListener("keydown", function(event) {
             if(event.key == "Escape") {
                 pop_up.style.display = "none";
@@ -2202,10 +2283,10 @@ function open_preference() {
         });
     });
 
+    // change color when the mouse hovers over the preference label
     preference.addEventListener("mouseover", function() {
         preference.style.color = button_on_color;
     });
-
     preference.addEventListener("mouseout", function() {
         preference.style.color = "black";
     });
