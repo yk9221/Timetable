@@ -9,7 +9,7 @@ Run these commands to install the required packages.
 - `npm install cheerio`
 - `npm i --save-dev nodemon`
 
-Once the packages were installed, run the server by typing the following.
+Once the packages are installed, run the server by typing the following.
 - `npm run dev`
 
 # FrontEnd
