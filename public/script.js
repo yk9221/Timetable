@@ -2215,7 +2215,7 @@ function open_preference() {
             const options = document.createElement("option");
             options.value = i * table_width;
 
-            if(i == table_height) {
+            if(i == JSON.parse(localStorage.getItem("table_height"))) {
                 options.selected = true;
             }
 
