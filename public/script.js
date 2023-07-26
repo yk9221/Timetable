@@ -2204,9 +2204,9 @@ function open_preference() {
         const num_options = 10;
 
         table_height_label.style.fontWeight = "bold";
-        table_height_label.style.marginRight = "8%";
+        table_height_label.style.marginRight = "21.5%";
 
-        table_height_label.appendChild(document.createTextNode("Number of schedule overview tables"));
+        table_height_label.appendChild(document.createTextNode("Number of Tables on Page"));
         table_height_div.appendChild(table_height_label);
         table_height_div.appendChild(table_height_combobox);
 
@@ -2239,7 +2239,7 @@ function open_preference() {
         conflict_checkbox.type = "checkbox";
         conflict_label.style.fontWeight = "bold";
         conflict_label.style.marginRight = "8%";
-        conflict_confirm_label.style.marginLeft = "10%";
+        conflict_confirm_label.style.marginLeft = "10.5%";
 
         conflict_label.appendChild(document.createTextNode("Ignore Tutorial Conflicts"));
 
