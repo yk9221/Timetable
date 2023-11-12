@@ -229,7 +229,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
             const starts = part_html("start");
             const ends = part_html("end");
             const building_codes = part_html("buildingCode");
-            // const building_room_numbers = part_html("buildingRoomNumber");
+            const building_links = part_html("buildingRoomNumber");
             const first_names = part_html("firstName");
             const last_names = part_html("lastName");
 
@@ -246,6 +246,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
             };
             course_info[i - 1]["time"] = new Array();
             course_info[i - 1]["building"] = new Array();
+            course_info[i - 1]["building_link"] = new Array();
             course_info[i - 1]["instructor"] = new Array();
 
             // parse the times for the course
@@ -255,7 +256,7 @@ function parse_course_info(course_code, data, course_term, course_description) {
                 const day = start.text()[0];
 
                 const building_code = part_html(building_codes[j]);
-                // const building_room_number = part_html(building_room_numbers[j]);
+                const building_link = part_html(building_links[j]);
 
                 let same_time = false;
                 const time_object = {
@@ -274,7 +275,8 @@ function parse_course_info(course_code, data, course_term, course_description) {
                 if(!same_time) {
                     course_info[i - 1]["time"].push(time_object);
                 }
-                course_info[i - 1]["building"].push(building_code.text() /*+ " " + building_room_number.text()*/);
+                course_info[i - 1]["building"].push(building_code.text());
+                course_info[i - 1]["building_link"].push(building_link.text());
             }
 
             // parse the instructor info
