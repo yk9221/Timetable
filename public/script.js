@@ -2079,6 +2079,7 @@ function open_exclude() {
 
                 // if the checkbox state was changed
                 check_box.addEventListener("change", function() {
+                    /*
                     // if the user tries to remove all of the same section type
                     if(!check_section_exclude(course_data, i, j) && !check_box.checked) {
                         loading.style.display = "flex";
@@ -2091,7 +2092,7 @@ function open_exclude() {
                         }, 1000);
 
                         return;
-                    }
+                    }*/
 
                     // if the checkbox was checked then add it to the exclude list
                     if(!check_box.checked) {
