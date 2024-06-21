@@ -2403,15 +2403,15 @@ const faculty_list_map = new Map([
 ]);
 // list of sessions
 const session_list = new Array(
-    "Fall 2024 (F)",
-    "Winter 2025 (S)",
-    "Fall-Winter 2024-2025 (Y)"
+    "Fall " + (new Date().getFullYear() - Number((new Date().getMonth() + 1) < 6)) + " (F)",
+    "Winter " + (new Date().getFullYear() + 1 - Number((new Date().getMonth() + 1) < 6)) + " (S)",
+    "Fall-Winter " + (new Date().getFullYear() - Number((new Date().getMonth() + 1) < 6)) + "-" + (new Date().getFullYear() + 1 - Number((new Date().getMonth() + 1) < 6)) + " (Y)"
 );
 // map of sessions with its abbreviation
 const session_list_map = new Map([
-    [session_list[0], "20249"],
-    [session_list[1], "20251"],
-    [session_list[2], "20249-20251"]
+    [session_list[0], (new Date().getFullYear() - Number((new Date().getMonth() + 1) < 6)) + "9"],
+    [session_list[1], (new Date().getFullYear() + 1 - Number((new Date().getMonth() + 1) < 6)) + "1"],
+    [session_list[2], + (new Date().getFullYear() - Number((new Date().getMonth() + 1) < 6)) + "9-" + (new Date().getFullYear() + 1 - Number((new Date().getMonth() + 1) < 6)) + "1"]
 ]);
 // list of preferences
 const preference_list = new Array(
