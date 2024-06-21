@@ -2402,15 +2402,15 @@ const faculty_list_map = new Map([
 ]);
 // list of sessions
 const session_list = new Array(
-    "Fall 2023 (F)",
-    "Winter 2024 (S)",
-    "Fall-Winter 2023-2024 (Y)"
+    "Fall 2024 (F)",
+    "Winter 2025 (S)",
+    "Fall-Winter 2024-2025 (Y)"
 );
 // map of sessions with its abbreviation
 const session_list_map = new Map([
-    [session_list[0], "20239"],
-    [session_list[1], "20241"],
-    [session_list[2], "20239-20241"]
+    [session_list[0], "20249"],
+    [session_list[1], "20251"],
+    [session_list[2], "20249-20251"]
 ]);
 // list of preferences
 const preference_list = new Array(
